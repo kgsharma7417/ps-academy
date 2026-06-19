@@ -30,39 +30,16 @@ const STYLES = `
     overflow-x: hidden;
   }
 
-  /* ── Top Info Bar ── */
-  .n-topbar {
-    background: var(--deep-blue);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 40px; height: 44px;
-    position: fixed; top: 0; left: 0; right: 0; z-index: 200;
-  }
-  .n-topbar-links { display: flex; gap: 0; align-items: center; }
-  .n-topbar-link {
-    font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.7);
-    text-decoration: none; padding: 0 16px; height: 44px;
-    display: flex; align-items: center;
-    border-bottom: 3px solid transparent; transition: all 0.2s;
-  }
-  .n-topbar-link:hover { color: #fff; }
-  .n-topbar-link.active { color: #fff; border-bottom-color: var(--orange); }
-  .n-topbar-search {
-    display: flex; align-items: center; gap: 8px;
-    color: rgba(255,255,255,0.7); font-size: 13px; cursor: pointer;
-    background: none; border: none; font-family: inherit; transition: color 0.2s;
-  }
-  .n-topbar-search:hover { color: #fff; }
-
   /* ── Main Navbar ── */
   .n-navbar {
-    position: fixed; top: 44px; left: 0; right: 0; z-index: 199;
+    position: fixed; top: 0; left: 0; right: 0; z-index: 199;
     display: flex; align-items: center; padding: 0 40px; height: 80px;
     transition: background 0.35s, box-shadow 0.35s;
-    background: transparent;
+    background: var(--burgundy);
+    box-shadow: 0 2px 16px rgba(0,0,0,0.18);
   }
   .n-navbar.scrolled {
-    background: rgba(0,20,40,0.92);
-    backdrop-filter: blur(16px);
+    background: var(--burgundy-dark);
     box-shadow: 0 4px 24px rgba(0,0,0,0.25);
   }
   .n-navbar-logo { display: flex; align-items: center; gap: 14px; text-decoration: none; flex-shrink: 0; }
@@ -91,7 +68,7 @@ const STYLES = `
     text-decoration: none; display: flex; align-items: center; gap: 6px;
     transition: all 0.25s; white-space: nowrap; font-family: 'Open Sans', sans-serif; cursor: pointer;
   }
-  .n-inquire-btn:hover { background: #fff; color: var(--deep-blue); }
+  .n-inquire-btn:hover { background: #fff; color: var(--burgundy); }
   .n-menu-btn { display: none; background: none; border: none; color: #fff; padding: 8px; cursor: pointer; margin-left: 12px; }
 
   /* ── Hero Slider ── */
@@ -352,7 +329,7 @@ const STYLES = `
   /* ── Mobile Menu ── */
   .n-mobile-menu { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 300; transform: translateX(-100%); transition: transform 0.35s cubic-bezier(.4,0,.2,1); }
   .n-mobile-menu.open { transform: translateX(0); }
-  .n-mobile-menu-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: var(--deep-blue); padding: 24px 0; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 8px 0 32px rgba(0,0,0,0.35); }
+  .n-mobile-menu-panel { position: absolute; top: 0; left: 0; bottom: 0; width: 280px; background: var(--burgundy-dark); padding: 24px 0; display: flex; flex-direction: column; overflow-y: auto; box-shadow: 8px 0 32px rgba(0,0,0,0.35); }
   .n-mobile-menu-close { background: none; border: none; color: rgba(255,255,255,0.7); font-size: 22px; cursor: pointer; padding: 8px 20px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; font-family: 'Open Sans', sans-serif; }
   .n-mobile-menu-close:hover { color: #fff; }
   .n-mobile-link { display: block; padding: 14px 24px; font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.8); text-decoration: none; border-bottom: 1px solid rgba(255,255,255,0.08); transition: all 0.18s; cursor: pointer; background: none; font-family: 'Open Sans', sans-serif; text-align: left; width: 100%; }
@@ -365,7 +342,6 @@ const STYLES = `
     .n-footer-grid { grid-template-columns: 1fr 1fr 1fr; }
   }
   @media (max-width: 768px) {
-    .n-topbar { padding: 0 20px; }
     .n-navbar { padding: 0 20px; height: 70px; }
     .n-navlinks .n-navlink:not(.n-inquire-btn) { display: none; }
     .n-menu-btn { display: block; }
@@ -393,69 +369,174 @@ const STYLES = `
     .n-gallery-grid { grid-template-columns: 1fr; }
     .n-gallery-item:nth-child(1), .n-gallery-item:nth-child(4) { grid-column: span 1; }
     .n-footer-grid { grid-template-columns: 1fr; }
-    .n-topbar-link:first-child { display: none; }
   }
 `;
 
-// ─── Default Content (must match WebAdminDashboard DEFAULT_CONTENT) ───────────
+// ─── Default Content (PS Academy Semra Khandoli, Agra) ───────────────────────
 const DEFAULT_CONTENT = {
-  heroTitle: "Excellence in Education",
-  heroSubtitle: "Shaping the leaders, thinkers, and innovators of tomorrow — a UP Board affiliated school in Lucknow committed to academic excellence, moral values, and all-round development.",
-  heroImageUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1920&auto=format&fit=crop",
-  ctaText: "Enquire for Admission →",
-  ctaSecondary: "Know Our School",
+  heroTitle: "P.S. Academy",
+  heroSubtitle:
+    "P.S. Academy Semra Khandoli, Agra mein ek up-board se affiliates school hai. Hum bachon ki shiksha aur unke sarvagina vikas ke liye pratibaddh hain — academic excellence, naitik mulya, aur holistic development.",
+  heroImageUrl:
+    "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1920&auto=format&fit=crop",
+  ctaText: "Admission ke liye sampark karein →",
+  ctaSecondary: "Hamare School ko jaanein",
   heroBadge: "Admissions Open 2025–26",
-  statsStudents: 1200,
-  statsFaculty: 95,
+  statsStudents: 4050,
+  statsFaculty: 330,
   statsLabs: 12,
-  statsPassRate: 98,
-  statsYears: 23,
+  statsPassRate: 96,
+  statsYears: 20,
   slides: [
-    { src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1920&auto=format&fit=crop", caption: "Shree H.S. Model High School — Lucknow" },
-    { src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1920&auto=format&fit=crop", caption: "Modern Classrooms for Quality Learning" },
-    { src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=1920&auto=format&fit=crop", caption: "Science Laboratories — Hands-on Education" },
-    { src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop", caption: "Sports Ground — All-Round Development" },
+    {
+      src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1920&auto=format&fit=crop",
+      caption: "🏫 P.S. Academy Semra Khandoli — Agra",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1920&auto=format&fit=crop",
+      caption: "📚 Aadhunik Classes — Gyan ki nai pehchan",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=1920&auto=format&fit=crop",
+      caption: "🔬 Science Labs — Practical Shiksha",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1920&auto=format&fit=crop",
+      caption: "⚽ Khel Ka Maidan — Sarvangin Vikas",
+    },
   ],
   gallery: [
-    { src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=900&auto=format&fit=crop", caption: "School Campus — Lucknow" },
-    { src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=900&auto=format&fit=crop", caption: "Modern Classrooms" },
-    { src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=900&auto=format&fit=crop", caption: "Science Laboratory" },
-    { src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=900&auto=format&fit=crop", caption: "Sports Ground" },
-    { src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=900&auto=format&fit=crop", caption: "Annual Day Celebrations" },
+    {
+      src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=900&auto=format&fit=crop",
+      caption: "📍 P.S. Academy Campus — Semra Khandoli",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=900&auto=format&fit=crop",
+      caption: "🏫 Aadhunik Classes",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=900&auto=format&fit=crop",
+      caption: "🔬 Science Laboratory",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=900&auto=format&fit=crop",
+      caption: "⚽ Sports Ground",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=900&auto=format&fit=crop",
+      caption: "🎭 Varshik Samaroh",
+    },
   ],
-  principalQuoteShort: "Education is the most powerful weapon you can use to change the world. At Shree H.S. Model Inter College, every student is empowered to unlock their true potential.",
-  principalName: "Rang Bahadur Singh Chauhan",
-  principalFull: "It is with immense pride and humility that I address the Shree H.S. Model High School family. Since our founding, we have strived to create an environment where every child feels valued, challenged, and inspired. Our school is not merely a place of academic learning — it is a second home where students develop intellect, character, resilience, and compassion.",
-  managerName: "Smt. Pushpa Devi Chauhan",
-  managerFull: "As the Director of Shree H.S. Model Inter College, my commitment has always been to provide an institution that is accessible, affordable, and of the highest quality. We have invested in modern classrooms, qualified teachers, and an environment that promotes curiosity and growth. Our students are our greatest achievement.",
-  contactAddress: "Shree H.S. Model Inter College, Lucknow, Uttar Pradesh",
-  contactPhone: "+91 98765 43210",
-  contactPhoneAdmission: "+91 98765 43211",
-  contactEmail: "info@shreehsmodel.edu.in",
+  principalQuoteShort:
+    "Shiksha ka uddeshya sirf marks nahi hai — yeh har bachche mein jigyasa, anushasan aur manavta ki lau jalane ka madhyam hai. P.S. Academy mein hum pratyek vidyarthi mein apni mahima pahchanne mein vishwas rakhte hain.",
+  principalName: "Principal - P.S. Academy",
+  principalFull:
+    "Shiksha ka uddeshya sirf akademik vikas nahi, balki ek aisa vatavaran banana hai jahan vidyarthi aur shikshak dono apne lakshya ko prapt kar sake. P.S. Academy Semra Khandoli, Agra mein hum bachchon ko theory aur practical dono mein maharat hasil karne ka avsar pradan karte hain. Humari jimmedari hai ki har bachche ko aise sthal pradan karein jo unki shiksha aur sahavidyarthi vikas mein sahayak ho. Principal ke roop mein mera prayaas hai ki har pidhi ko avsar, samman aur safalta ka marg dikhaya jaye.",
+  managerName: "P.S. Academy Prabandhan Samiti",
+  managerFull:
+    "P.S. Academy Semra Khandoli, Agra ka prabandhan samiti hamesha se ek aisi shikshan sanstha pradan karne ke liye pratibaddh raha hai jo sabke liye sulabh, sasta aur uttam koti ki ho. Humne aadhunik classes, yogya teachers aur ek aisa mahaul banaya hai jo jigyasa aur vikas ko badhava de. Hamare vidyarthi hi hamari sabse badi uplabdhi hain.",
+  contactAddress: "P.S. Academy, Semra Khandoli, Agra, Uttar Pradesh",
+  contactPhone: "+91 99271 70258",
+  contactPhoneAdmission: "+91 99271 70258",
+  contactEmail: "psacademysemra@gmail.com",
   contactHours: "Mon – Sat: 8:00 AM – 3:00 PM",
   notices: [
-    { day: "20", mon: "Jun", title: "Class 10 & 12 Final Exam Schedule Released", desc: "UP Board final examination timetable for Class 10 and 12 has been released. Students must collect admit cards by 25 June.", tag: "exam" },
-    { day: "15", mon: "Jun", title: "Independence Day Celebration – 15 August", desc: "All students and staff are requested to be present at 7:00 AM for flag hoisting. White uniform compulsory.", tag: "event" },
-    { day: "10", mon: "Jun", title: "Parent-Teacher Meeting – Class 6 to 10", desc: "PTM for classes 6–10 will be held on 22nd June (Saturday) between 9 AM – 1 PM. Collect your child's progress report.", tag: "meeting" },
-    { day: "05", mon: "Jun", title: "Half-Yearly Holiday Notice", desc: "School will remain closed from 20 June to 30 June (summer vacation). Classes resume on 1st July.", tag: "holiday" },
+    {
+      day: "01",
+      mon: "Apr",
+      title: "Naye Shiksha Sesh 2025–26 ke liye Admission Khule",
+      desc: "Class 1 se 11 tak admission khule hain. School office se sampark karein 9 AM se 2 PM ke beech. Aavashyak dastawej: Birth certificate, marksheet, Aadhar card.",
+      tag: "event",
+    },
+    {
+      day: "15",
+      mon: "Aug",
+      title: "Swatantrata Diwas Samaroh – 15 August",
+      desc: "Sabhi vidyarthi aur staff 15 August ko 7:00 AM par upasthit rahein. Jhanda fahran aur sanskritik karyakram honge. White uniform anivarya hai.",
+      tag: "event",
+    },
+    {
+      day: "10",
+      mon: "Jun",
+      title: "Parent-Teacher Meeting – Class 6 se 10",
+      desc: "Classes 6 se 10 ki PTM 22 June (Shanivar) 9 AM – 1 PM ke beech hogi. Abhibhavak apne bachche ki progress report lena na bhoolen.",
+      tag: "meeting",
+    },
+    {
+      day: "05",
+      mon: "Jun",
+      title: "Garmi ki Chhuttiyan",
+      desc: "Vidyalay 20 June se 30 June tak garmi ki chhuttiyon ke liye band rahega. Classes 1 July se punah suru hongi.",
+      tag: "holiday",
+    },
   ],
   whyCards: [
-    { icon: "🎓", title: "Academic Excellence", desc: "Consistent top results in UP Board with 98%+ pass rate every year for over two decades." },
-    { icon: "🔬", title: "Modern Laboratories", desc: "State-of-the-art Physics, Chemistry, Biology, and Computer Science labs for hands-on learning." },
-    { icon: "🏆", title: "Sports & Activities", desc: "Cricket, volleyball, athletics, yoga, art, music and NCC — holistic development for every student." },
-    { icon: "📚", title: "Smart Classrooms", desc: "Digital smart boards, e-learning resources, and experienced faculty for interactive education." },
+    {
+      icon: "🏆",
+      title: "Academic Excellence",
+      desc: "UP Board exams mein lagatar behtarin parinam — 96%+ pass rate har saal.",
+    },
+    {
+      icon: "🕉️",
+      title: "Naitik Mulya",
+      desc: "Pratidin prarthana, yog aur sanskrit shlokon ke through charitra nirman.",
+    },
+    {
+      icon: "🔬",
+      title: "Aadhunik Labs",
+      desc: "Physics, Chemistry, Biology aur Computer labs — vyavaharik shiksha ke liye.",
+    },
+    {
+      icon: "⚽",
+      title: "Khel aur Kala",
+      desc: "Varshik khel samaroh, sanskritik karyakram, drawing competition — pratibha ki pehchan.",
+    },
   ],
 };
 
 const CAMPUS_CARDS = [
-  { img: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=900&auto=format&fit=crop", title: "Primary School Campus", desc: "Classes I – V", color: "var(--burgundy)" },
-  { img: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=900&auto=format&fit=crop", title: "Secondary School Campus", desc: "Classes VI – X", color: "var(--orange)" },
-  { img: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=900&auto=format&fit=crop", title: "Senior Secondary Campus", desc: "Classes XI – XII (Science, Commerce, Arts)", color: "var(--deep-blue)" },
+  {
+    img: "https://images.unsplash.com/photo-1562774053-701939374585?q=80&w=900&auto=format&fit=crop",
+    title: "Primary Section",
+    desc: "Classes I – V",
+    color: "var(--burgundy)",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=900&auto=format&fit=crop",
+    title: "Middle & High School",
+    desc: "Classes VI – X",
+    color: "var(--orange)",
+  },
+  {
+    img: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=900&auto=format&fit=crop",
+    title: "Senior Secondary",
+    desc: "Classes XI – XII (Science, Commerce, Arts)",
+    color: "var(--deep-blue)",
+  },
 ];
 
-const TAG_STYLES = { exam: "n-tag-exam", event: "n-tag-event", holiday: "n-tag-holiday", meeting: "n-tag-meeting" };
-const TAG_LABELS = { exam: "Exam", event: "Event", holiday: "Holiday", meeting: "PTM" };
-const ICON_BG = ["#fff0f2", "#f0f4ff", "#fff8e8", "#f0fff4", "#f5f0ff", "#fff0f8"];
+const TAG_STYLES = {
+  exam: "n-tag-exam",
+  event: "n-tag-event",
+  holiday: "n-tag-holiday",
+  meeting: "n-tag-meeting",
+};
+const TAG_LABELS = {
+  exam: "Exam",
+  event: "Event",
+  holiday: "Holiday",
+  meeting: "PTM",
+};
+const ICON_BG = [
+  "#fff0f2",
+  "#f0f4ff",
+  "#fff8e8",
+  "#f0fff4",
+  "#f5f0ff",
+  "#fff0f8",
+];
+
+const STORAGE_KEY = "school_erp_landing_content_v2";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export const LandingPage = () => {
@@ -466,6 +547,7 @@ export const LandingPage = () => {
   const [formSent, setFormSent] = useState(false);
   const { userRole } = useAuth();
   const slideTimer = useRef(null);
+  const lastRawRef = useRef(null); // tracks last-seen raw JSON string from localStorage
 
   // ── Inject CSS
   useEffect(() => {
@@ -476,17 +558,39 @@ export const LandingPage = () => {
   }, []);
 
   // ── Load content from localStorage (WebAdmin saves here)
+  // Combines: custom in-tab event, native cross-tab "storage" event,
+  // window focus, and a short poll — so the page updates no matter
+  // which of those signals actually fires in this environment.
   useEffect(() => {
     const load = () => {
       try {
-        const saved = localStorage.getItem("school_erp_landing_content_v2");
-        if (saved) setC({ ...DEFAULT_CONTENT, ...JSON.parse(saved) });
-      } catch { }
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved && saved !== lastRawRef.current) {
+          lastRawRef.current = saved;
+          setC({ ...DEFAULT_CONTENT, ...JSON.parse(saved) });
+        }
+      } catch {
+        // ignore malformed JSON in storage
+      }
     };
-    load();
-    // Re-load when storage changes (e.g., WebAdmin saves in another tab)
+
+    load(); // initial load
+
     window.addEventListener("storage", load);
-    return () => window.removeEventListener("storage", load);
+    window.addEventListener("school-erp-content-updated", load);
+    window.addEventListener("focus", load);
+
+    // Safety-net poll: catches updates even if an event listener
+    // got detached due to a remount, or if the save happened in a
+    // way that didn't fire the custom event.
+    const pollId = setInterval(load, 1500);
+
+    return () => {
+      window.removeEventListener("storage", load);
+      window.removeEventListener("school-erp-content-updated", load);
+      window.removeEventListener("focus", load);
+      clearInterval(pollId);
+    };
   }, []);
 
   // ── Hero auto-slide
@@ -500,7 +604,9 @@ export const LandingPage = () => {
   }, [c.slides]);
 
   // Reset slide index if slides change
-  useEffect(() => { setSlideIdx(0); }, [c.slides?.length]);
+  useEffect(() => {
+    setSlideIdx(0);
+  }, [c.slides?.length]);
 
   // ── Navbar scroll
   useEffect(() => {
@@ -509,16 +615,19 @@ export const LandingPage = () => {
     return () => window.removeEventListener("scroll", h);
   }, []);
 
-  const goToSlide = useCallback((i) => {
-    setSlideIdx(i);
-    clearInterval(slideTimer.current);
-    const slides = c.slides || [];
-    if (slides.length > 1) {
-      slideTimer.current = setInterval(() => {
-        setSlideIdx((s) => (s + 1) % slides.length);
-      }, 5000);
-    }
-  }, [c.slides]);
+  const goToSlide = useCallback(
+    (i) => {
+      setSlideIdx(i);
+      clearInterval(slideTimer.current);
+      const slides = c.slides || [];
+      if (slides.length > 1) {
+        slideTimer.current = setInterval(() => {
+          setSlideIdx((s) => (s + 1) % slides.length);
+        }, 5000);
+      }
+    },
+    [c.slides],
+  );
 
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -545,46 +654,59 @@ export const LandingPage = () => {
   const notices = c.notices || [];
   const whyCards = c.whyCards || [];
 
-  const principalInitials = (c.principalName || "RC")
-    .split(" ").filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  const principalInitials = (c.principalName || "PS")
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
 
   return (
     <div>
-      {/* ── Top Info Bar ── */}
-      <div className="n-topbar">
-        <div className="n-topbar-links">
-          <span className="n-topbar-link">CBSE / UP Board Affiliated</span>
-          <span className="n-topbar-link active">Shree H.S. Model Inter College</span>
-        </div>
-        <button className="n-topbar-search" onClick={() => scrollTo("n-contact")}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
-          Contact Us
-        </button>
-      </div>
-
       {/* ── Navbar ── */}
       <nav className={`n-navbar${scrolled ? " scrolled" : ""}`}>
         <a href="#" className="n-navbar-logo">
           <div className="n-logo-emblem">
-            <img src="https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?q=80&w=100&auto=format&fit=crop" alt="Logo"
-              onError={e => { e.target.style.display = "none"; e.target.parentNode.textContent = "SH"; }} />
+            <span style={{ fontSize: 14 }}>PS</span>
           </div>
           <div className="n-logo-text">
-            <span className="t1">Shree H.S. Model Inter College</span>
-            <span className="t2">Lucknow, Uttar Pradesh · Est. 1998</span>
+            <span className="t1">P.S. Academy</span>
+            <span className="t2">Semra Khandoli, Agra · UP Board</span>
           </div>
         </a>
         <div className="n-navlinks">
-          <button className="n-navlink" onClick={() => scrollTo("n-about")}>About Us</button>
-          <button className="n-navlink" onClick={() => scrollTo("n-features")}>Academics</button>
-          <button className="n-navlink" onClick={() => scrollTo("n-gallery")}>Gallery</button>
-          <button className="n-navlink" onClick={() => scrollTo("n-notices")}>Notices</button>
-          <button className="n-navlink" onClick={() => scrollTo("n-contact")}>Contact</button>
+          <button className="n-navlink" onClick={() => scrollTo("n-about")}>
+            About Us
+          </button>
+          <button className="n-navlink" onClick={() => scrollTo("n-features")}>
+            Academics
+          </button>
+          <button className="n-navlink" onClick={() => scrollTo("n-gallery")}>
+            Gallery
+          </button>
+          <button className="n-navlink" onClick={() => scrollTo("n-notices")}>
+            Notices
+          </button>
+          <button className="n-navlink" onClick={() => scrollTo("n-contact")}>
+            Contact
+          </button>
           <Link to={getDashboardPath()} className="n-inquire-btn">
             {userRole ? "My Dashboard ↗" : "Portal Login ↗"}
           </Link>
           <button className="n-menu-btn" onClick={() => setMenuOpen(true)}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="3" y1="6" x2="21" y2="6" /><line x1="3" y1="12" x2="21" y2="12" /><line x1="3" y1="18" x2="21" y2="18" /></svg>
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
           </button>
         </div>
       </nav>
@@ -593,29 +715,57 @@ export const LandingPage = () => {
       <div className={`n-mobile-menu${menuOpen ? " open" : ""}`}>
         <div className="n-mobile-overlay" onClick={() => setMenuOpen(false)} />
         <div className="n-mobile-menu-panel">
-          <button className="n-mobile-menu-close" onClick={() => setMenuOpen(false)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
+          <button
+            className="n-mobile-menu-close"
+            onClick={() => setMenuOpen(false)}
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
             Close
           </button>
-          {["n-about", "n-features", "n-gallery", "n-notices", "n-contact"].map((id, i) => (
-            <button key={id} className="n-mobile-link" onClick={() => scrollTo(id)}>
-              {["About Us", "Academics", "Gallery", "Notices", "Contact"][i]}
-            </button>
-          ))}
-          <Link to={getDashboardPath()} className="n-mobile-link" onClick={() => setMenuOpen(false)}>
+          {["n-about", "n-features", "n-gallery", "n-notices", "n-contact"].map(
+            (id, i) => (
+              <button
+                key={id}
+                className="n-mobile-link"
+                onClick={() => scrollTo(id)}
+              >
+                {["About Us", "Academics", "Gallery", "Notices", "Contact"][i]}
+              </button>
+            ),
+          )}
+          <Link
+            to={getDashboardPath()}
+            className="n-mobile-link"
+            onClick={() => setMenuOpen(false)}
+          >
             {userRole ? "My Dashboard" : "Portal Login"}
           </Link>
         </div>
       </div>
 
       {/* ── Hero Slider ── */}
-      <div style={{ marginTop: "124px" }}>
+      <div style={{ marginTop: "80px" }}>
         <div className="n-hero-wrapper">
-          {slides.length > 0 ? slides.map((slide, i) => (
-            <div key={i} className={`n-hero-slide${slideIdx === i ? " active" : ""}`}>
-              <img src={slide.src} alt={slide.caption || `Slide ${i + 1}`} />
-            </div>
-          )) : (
+          {slides.length > 0 ? (
+            slides.map((slide, i) => (
+              <div
+                key={i}
+                className={`n-hero-slide${slideIdx === i ? " active" : ""}`}
+              >
+                <img src={slide.src} alt={slide.caption || `Slide ${i + 1}`} />
+              </div>
+            ))
+          ) : (
             <div className="n-hero-slide active">
               <img src={DEFAULT_CONTENT.slides[0].src} alt="Hero" />
             </div>
@@ -628,7 +778,11 @@ export const LandingPage = () => {
           {slides.length > 1 && (
             <div className="n-hero-dots">
               {slides.map((_, i) => (
-                <button key={i} className={`n-hero-dot${slideIdx === i ? " active" : ""}`} onClick={() => goToSlide(i)} />
+                <button
+                  key={i}
+                  className={`n-hero-dot${slideIdx === i ? " active" : ""}`}
+                  onClick={() => goToSlide(i)}
+                />
               ))}
               <span className="n-hero-dot-num">{slideIdx + 1}</span>
             </div>
@@ -640,8 +794,12 @@ export const LandingPage = () => {
       <Link
         to={getDashboardPath()}
         className="n-portal-side-btn"
-        onMouseEnter={e => { e.currentTarget.style.right = "0px"; }}
-        onMouseLeave={e => { e.currentTarget.style.right = "-62px"; }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.right = "0px";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.right = "-62px";
+        }}
       >
         <span>⌃</span> Portal Login
       </Link>
@@ -649,15 +807,15 @@ export const LandingPage = () => {
       {/* ── Stats Bar ── */}
       <div className="n-stats-bar">
         <div className="n-stat-item">
-          <div className="n-stat-num">{c.statsStudents || 1200}+</div>
+          <div className="n-stat-num">{c.statsStudents || 4050}+</div>
           <div className="n-stat-label">Students</div>
         </div>
         <div className="n-stat-item">
-          <div className="n-stat-num">{c.statsFaculty || 95}+</div>
-          <div className="n-stat-label">Faculty</div>
+          <div className="n-stat-num">{c.statsFaculty || 330}+</div>
+          <div className="n-stat-label">Staff</div>
         </div>
         <div className="n-stat-item">
-          <div className="n-stat-num">{c.statsPassRate || 98}%</div>
+          <div className="n-stat-num">{c.statsPassRate || 96}%</div>
           <div className="n-stat-label">Pass Rate</div>
         </div>
         <div className="n-stat-item">
@@ -665,8 +823,8 @@ export const LandingPage = () => {
           <div className="n-stat-label">Modern Labs</div>
         </div>
         <div className="n-stat-item">
-          <div className="n-stat-num">{c.statsYears || 23}+</div>
-          <div className="n-stat-label">Years of Excellence</div>
+          <div className="n-stat-num">{c.statsYears || 20}+</div>
+          <div className="n-stat-label">Years of Service</div>
         </div>
       </div>
 
@@ -675,26 +833,44 @@ export const LandingPage = () => {
         <div className="n-leader-left">
           <div className="n-leader-bg-pattern" />
           <div className="n-leader-quote-mark">"</div>
-          <div className="n-leader-heading">A Vision of Excellence in Education</div>
-          <div className="n-leader-quote">{c.principalFull || DEFAULT_CONTENT.principalFull}</div>
+          <div className="n-leader-heading">Shiksha mein Uttamta ka Vision</div>
+          <div className="n-leader-quote">
+            {c.principalFull || DEFAULT_CONTENT.principalFull}
+          </div>
           <div className="n-leader-divider" />
-          <div className="n-leader-name">{c.principalName || DEFAULT_CONTENT.principalName}</div>
-          <div className="n-leader-title">Principal &amp; Founder</div>
-          <img className="n-leader-photo"
+          <div className="n-leader-name">
+            {c.principalName || DEFAULT_CONTENT.principalName}
+          </div>
+          <div className="n-leader-title">Principal</div>
+          <img
+            className="n-leader-photo"
             src="https://images.unsplash.com/photo-1607990283143-e81e7a2c9349?q=80&w=600&auto=format&fit=crop"
-            alt="Principal" onError={e => { e.target.style.display = "none"; }} />
+            alt="Principal"
+            onError={(e) => {
+              e.target.style.display = "none";
+            }}
+          />
         </div>
         <div className="n-leader-right">
           <div className="n-leader-bg-pattern" />
           <div className="n-leader-quote-mark">"</div>
           <div style={{ height: "60px" }} />
-          <div className="n-leader-quote">{c.managerFull || DEFAULT_CONTENT.managerFull}</div>
+          <div className="n-leader-quote">
+            {c.managerFull || DEFAULT_CONTENT.managerFull}
+          </div>
           <div className="n-leader-divider" />
-          <div className="n-leader-name">{c.managerName || DEFAULT_CONTENT.managerName}</div>
-          <div className="n-leader-title">Director &amp; Manager</div>
-          <img className="n-leader-photo"
+          <div className="n-leader-name">
+            {c.managerName || DEFAULT_CONTENT.managerName}
+          </div>
+          <div className="n-leader-title">Prabandhan Samiti</div>
+          <img
+            className="n-leader-photo"
             src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=600&auto=format&fit=crop"
-            alt="Director" onError={e => { e.target.style.display = "none"; }} />
+            alt="Management"
+            onError={(e) => {
+              e.target.style.display = "none";
+            }}
+          />
         </div>
       </div>
 
@@ -702,15 +878,26 @@ export const LandingPage = () => {
       <div className="n-section alt-bg">
         <div className="n-section-inner">
           <div className="n-section-header">
-            <h2 className="n-section-title">Our Campus</h2>
-            <p className="n-section-sub">Three levels of excellence — primary, secondary, and senior secondary education under one roof.</p>
+            <h2 className="n-section-title">Hamara Campus</h2>
+            <p className="n-section-sub">
+              Ek chhat ke neeche prathmik, madhyamik aur senior madhyamik
+              shiksha — teeno star par uttamta.
+            </p>
           </div>
           <div className="n-campuses-grid">
             {CAMPUS_CARDS.map((card, i) => (
               <div className="n-campus-card" key={i}>
-                <img className="n-campus-card-img" src={card.img} alt={card.title} />
-                <div className="n-campus-card-overlay"
-                  style={{ background: `linear-gradient(0deg, ${card.color}ee 0%, ${card.color}88 40%, transparent 100%)` }}>
+                <img
+                  className="n-campus-card-img"
+                  src={card.img}
+                  alt={card.title}
+                />
+                <div
+                  className="n-campus-card-overlay"
+                  style={{
+                    background: `linear-gradient(0deg, ${card.color}ee 0%, ${card.color}88 40%, transparent 100%)`,
+                  }}
+                >
                   <h3>{card.title}</h3>
                   <p>{card.desc}</p>
                 </div>
@@ -725,21 +912,29 @@ export const LandingPage = () => {
         <div className="n-admissions-content">
           <h2>Admissions</h2>
           <p>{c.ctaText || DEFAULT_CONTENT.ctaText}</p>
-          <button className="n-admissions-btn" onClick={() => scrollTo("n-contact")}>
-            Inquire Now ↗
+          <button
+            className="n-admissions-btn"
+            onClick={() => scrollTo("n-contact")}
+          >
+            Abhi Inquiry Karein ↗
           </button>
         </div>
-        <img className="n-admissions-img"
+        <img
+          className="n-admissions-img"
           src="https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=900&auto=format&fit=crop"
-          alt="Students" />
+          alt="Students"
+        />
       </div>
 
       {/* ── Notices ── */}
       <div id="n-notices" className="n-section">
         <div className="n-section-inner">
           <div className="n-section-header">
-            <h2 className="n-section-title">Notices &amp; Announcements</h2>
-            <p className="n-section-sub">Stay informed with the latest updates, events, and important notices from the school.</p>
+            <h2 className="n-section-title">Notices aur Announcements</h2>
+            <p className="n-section-sub">
+              School ke naye updates, events aur important notices se update
+              rahein.
+            </p>
           </div>
           {notices.length > 0 ? (
             <div className="n-notices-grid">
@@ -752,7 +947,9 @@ export const LandingPage = () => {
                   <div>
                     <div className="n-notice-title">{n.title}</div>
                     <div className="n-notice-desc">{n.desc}</div>
-                    <span className={`n-notice-tag ${TAG_STYLES[n.tag] || "n-tag-event"}`}>
+                    <span
+                      className={`n-notice-tag ${TAG_STYLES[n.tag] || "n-tag-event"}`}
+                    >
                       {TAG_LABELS[n.tag] || n.tag}
                     </span>
                   </div>
@@ -760,7 +957,15 @@ export const LandingPage = () => {
               ))}
             </div>
           ) : (
-            <div style={{ textAlign: "center", color: "var(--text-mid)", padding: "40px", background: "var(--off-white)", borderRadius: "16px" }}>
+            <div
+              style={{
+                textAlign: "center",
+                color: "var(--text-mid)",
+                padding: "40px",
+                background: "var(--off-white)",
+                borderRadius: "16px",
+              }}
+            >
               Koi notices nahi hain filhaal. WebAdmin se notices add karo.
             </div>
           )}
@@ -771,13 +976,19 @@ export const LandingPage = () => {
       <div id="n-features" className="n-section alt-bg">
         <div className="n-section-inner">
           <div className="n-section-header">
-            <h2 className="n-section-title">Why Shree H.S. Model?</h2>
-            <p className="n-section-sub">Delivering excellence in education through modern infrastructure, dedicated faculty, and a student-first approach.</p>
+            <h2 className="n-section-title">Kyun P.S. Academy?</h2>
+            <p className="n-section-sub">
+              Aadhunik infrastructure, samarpit faculty aur student-first
+              approach ke saath shiksha mein uttamta.
+            </p>
           </div>
           <div className="n-features-grid">
             {whyCards.map((f, i) => (
               <div className="n-feature-card" key={i}>
-                <div className="n-feature-icon" style={{ background: ICON_BG[i % ICON_BG.length] }}>
+                <div
+                  className="n-feature-icon"
+                  style={{ background: ICON_BG[i % ICON_BG.length] }}
+                >
                   {f.icon}
                 </div>
                 <h3>{f.title}</h3>
@@ -792,7 +1003,7 @@ export const LandingPage = () => {
       <div className="n-section">
         <div className="n-section-inner">
           <div className="n-section-header">
-            <h2 className="n-section-title">Principal's Message</h2>
+            <h2 className="n-section-title">Principal ka Sandesh</h2>
           </div>
           <div className="n-principal-card">
             <div className="n-principal-avatar">{principalInitials}</div>
@@ -802,8 +1013,12 @@ export const LandingPage = () => {
                 {c.principalQuoteShort || DEFAULT_CONTENT.principalQuoteShort}
               </div>
               <div className="n-principal-divider" />
-              <div className="n-principal-name">{c.principalName || DEFAULT_CONTENT.principalName}</div>
-              <div className="n-principal-role">Principal · Shree H.S. Model Inter College</div>
+              <div className="n-principal-name">
+                {c.principalName || DEFAULT_CONTENT.principalName}
+              </div>
+              <div className="n-principal-role">
+                Principal · P.S. Academy Semra Khandoli
+              </div>
             </div>
           </div>
         </div>
@@ -813,20 +1028,36 @@ export const LandingPage = () => {
       <div id="n-gallery" className="n-section alt-bg">
         <div className="n-section-inner">
           <div className="n-section-header">
-            <h2 className="n-section-title">Life at Shree H.S. Model</h2>
-            <p className="n-section-sub">A glimpse into the vibrant campus life, events, and achievements of our school community.</p>
+            <h2 className="n-section-title">P.S. Academy ki Jhalak</h2>
+            <p className="n-section-sub">
+              Hamare vibrant campus life, events aur achievements ki ek jhalak.
+            </p>
           </div>
           {gallery.length > 0 ? (
             <div className="n-gallery-grid">
               {gallery.map((g, i) => (
                 <div className="n-gallery-item" key={i}>
-                  <img className="n-gallery-img" src={g.src} alt={g.caption || `Gallery ${i + 1}`} />
-                  {g.caption && <div className="n-gallery-caption">{g.caption}</div>}
+                  <img
+                    className="n-gallery-img"
+                    src={g.src}
+                    alt={g.caption || `Gallery ${i + 1}`}
+                  />
+                  {g.caption && (
+                    <div className="n-gallery-caption">{g.caption}</div>
+                  )}
                 </div>
               ))}
             </div>
           ) : (
-            <div style={{ textAlign: "center", color: "var(--text-mid)", padding: "40px", background: "#fff", borderRadius: "16px" }}>
+            <div
+              style={{
+                textAlign: "center",
+                color: "var(--text-mid)",
+                padding: "40px",
+                background: "#fff",
+                borderRadius: "16px",
+              }}
+            >
               Gallery mein koi photos nahi hain. WebAdmin se photos add karo.
             </div>
           )}
@@ -837,26 +1068,40 @@ export const LandingPage = () => {
       <div id="n-contact" className="n-section">
         <div className="n-section-inner">
           <div className="n-section-header">
-            <h2 className="n-section-title">Contact Us</h2>
-            <p className="n-section-sub">Reach out to us for admissions, queries, or visit our campus in Lucknow.</p>
+            <h2 className="n-section-title">Humse Sampark Karein</h2>
+            <p className="n-section-sub">
+              Admission, query ya campus visit ke liye Agra mein humse sampark
+              karein.
+            </p>
           </div>
           <div className="n-contact-grid">
             <div className="n-contact-info">
               <div className="n-contact-card">
                 <div className="n-contact-icon">📍</div>
                 <div>
-                  <div className="n-contact-label">Address</div>
-                  <div className="n-contact-value">{c.contactAddress || DEFAULT_CONTENT.contactAddress}</div>
+                  <div className="n-contact-label">Pata</div>
+                  <div className="n-contact-value">
+                    {c.contactAddress || DEFAULT_CONTENT.contactAddress}
+                  </div>
                 </div>
               </div>
               <div className="n-contact-card">
                 <div className="n-contact-icon">📞</div>
                 <div>
                   <div className="n-contact-label">Phone</div>
-                  <div className="n-contact-value">{c.contactPhone || DEFAULT_CONTENT.contactPhone}</div>
+                  <div className="n-contact-value">
+                    {c.contactPhone || DEFAULT_CONTENT.contactPhone}
+                  </div>
                   {c.contactPhoneAdmission && (
-                    <div className="n-contact-value" style={{ marginTop: 4, fontSize: 13, color: "var(--text-mid)" }}>
-                      Admissions: {c.contactPhoneAdmission}
+                    <div
+                      className="n-contact-value"
+                      style={{
+                        marginTop: 4,
+                        fontSize: 13,
+                        color: "var(--text-mid)",
+                      }}
+                    >
+                      Admission: {c.contactPhoneAdmission}
                     </div>
                   )}
                 </div>
@@ -865,31 +1110,45 @@ export const LandingPage = () => {
                 <div className="n-contact-icon">✉️</div>
                 <div>
                   <div className="n-contact-label">Email</div>
-                  <div className="n-contact-value">{c.contactEmail || DEFAULT_CONTENT.contactEmail}</div>
+                  <div className="n-contact-value">
+                    {c.contactEmail || DEFAULT_CONTENT.contactEmail}
+                  </div>
                 </div>
               </div>
               <div className="n-contact-card">
                 <div className="n-contact-icon">🕐</div>
                 <div>
                   <div className="n-contact-label">Office Hours</div>
-                  <div className="n-contact-value">{c.contactHours || DEFAULT_CONTENT.contactHours}</div>
+                  <div className="n-contact-value">
+                    {c.contactHours || DEFAULT_CONTENT.contactHours}
+                  </div>
                 </div>
               </div>
             </div>
 
             <form className="n-contact-form" onSubmit={handleFormSubmit}>
               <div>
-                <label className="n-field-label">Full Name</label>
-                <input type="text" className="n-field-input" placeholder="Your full name" required />
+                <label className="n-field-label">Poora Naam</label>
+                <input
+                  type="text"
+                  className="n-field-input"
+                  placeholder="Apna poora naam"
+                  required
+                />
               </div>
               <div>
                 <label className="n-field-label">Phone Number</label>
-                <input type="tel" className="n-field-input" placeholder="+91 00000 00000" required />
+                <input
+                  type="tel"
+                  className="n-field-input"
+                  placeholder="+91 00000 00000"
+                  required
+                />
               </div>
               <div>
                 <label className="n-field-label">Enquiry Type</label>
                 <select className="n-field-select" required>
-                  <option value="">Select...</option>
+                  <option value="">Select karein...</option>
                   <option>Admission Enquiry</option>
                   <option>General Query</option>
                   <option>Fee Information</option>
@@ -897,82 +1156,107 @@ export const LandingPage = () => {
                 </select>
               </div>
               <div>
-                <label className="n-field-label">Message</label>
-                <textarea className="n-field-textarea" rows={4} placeholder="Write your message..." />
+                <label className="n-field-label">Sandesh</label>
+                <textarea
+                  className="n-field-textarea"
+                  rows={4}
+                  placeholder="Apna sandesh likhein..."
+                />
               </div>
-              <button type="submit" className="n-submit-btn">Send Message →</button>
-              {formSent && <div className="n-form-success">✅ Your message has been sent! We'll get back to you soon.</div>}
+              <button type="submit" className="n-submit-btn">
+                Sandesh Bhejein →
+              </button>
+              {formSent && (
+                <div className="n-form-success">
+                  ✅ Aapka sandesh bheja gaya! Hum jald hi sampark karenge.
+                </div>
+              )}
             </form>
           </div>
         </div>
       </div>
 
       {/* ── Footer ── */}
-      <footer className="n-footer">
+      <div className="n-footer">
         <div className="n-footer-inner">
           <div className="n-footer-grid">
             <div className="n-footer-logo">
               <div className="n-footer-logo-emblem">
-                <img src="https://images.unsplash.com/photo-1619546813926-a78fa6372cd2?q=80&w=100&auto=format&fit=crop" alt="Logo"
-                  onError={e => { e.target.style.display = "none"; e.target.parentNode.textContent = "SH"; }} />
+                <span style={{ fontSize: 18 }}>PS</span>
               </div>
               <div>
-                <div className="n-footer-logo-name">Shree H.S. Model Inter College</div>
-                <div className="n-footer-logo-est">Est. 1998 · Lucknow, U.P.</div>
+                <div className="n-footer-logo-name">P.S. Academy</div>
+                <div className="n-footer-logo-est">
+                  Est. · Semra Khandoli, Agra
+                </div>
               </div>
               <div className="n-footer-social">
-                <a href="#" className="n-social-link" title="Instagram">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" /></svg>
+                <a href="#" className="n-social-link" aria-label="Facebook">
+                  f
                 </a>
-                <a href="#" className="n-social-link" title="Facebook">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+                <a href="#" className="n-social-link" aria-label="WhatsApp">
+                  W
                 </a>
-                <a href="#" className="n-social-link" title="YouTube">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.54C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" /><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none" /></svg>
+                <a href="#" className="n-social-link" aria-label="YouTube">
+                  ▶
                 </a>
               </div>
             </div>
-
             <div className="n-footer-col">
               <h4>Quick Links</h4>
               <button onClick={() => scrollTo("n-about")}>About Us</button>
               <button onClick={() => scrollTo("n-features")}>Academics</button>
-              <button onClick={() => scrollTo("n-notices")}>Notices</button>
               <button onClick={() => scrollTo("n-gallery")}>Gallery</button>
+              <button onClick={() => scrollTo("n-notices")}>Notices</button>
               <button onClick={() => scrollTo("n-contact")}>Contact</button>
             </div>
-
             <div className="n-footer-col">
-              <h4>Portals</h4>
-              <Link to="/login">Parent Login</Link>
-              <Link to="/login">Teacher Login</Link>
-              <Link to="/login">Admin Login</Link>
-              <Link to="/signup">Register</Link>
+              <h4>Academics</h4>
+              <a href="#">Primary Section (I–V)</a>
+              <a href="#">Middle School (VI–VIII)</a>
+              <a href="#">High School (IX–X)</a>
+              <a href="#">Senior Secondary (XI–XII)</a>
             </div>
-
             <div className="n-footer-col">
-              <h4>Policies</h4>
-              <a href="#">Privacy Policy</a>
-              <a href="#">Terms &amp; Conditions</a>
-              <a href="#">Admission Policy</a>
-              <a href="#">Code of Conduct</a>
+              <h4>Admissions</h4>
+              <button onClick={() => scrollTo("n-contact")}>Apply Now</button>
+              <a href="#">Fee Structure</a>
+              <a href="#">Scholarships</a>
+              <a href="#">Documents Required</a>
             </div>
-
             <div className="n-footer-col">
-              <h4>Get in Touch</h4>
-              <a href="#">{c.contactAddress || DEFAULT_CONTENT.contactAddress}</a>
-              <a href={`tel:${c.contactPhone}`}>{c.contactPhone || DEFAULT_CONTENT.contactPhone}</a>
-              <a href={`mailto:${c.contactEmail}`}>{c.contactEmail || DEFAULT_CONTENT.contactEmail}</a>
-              <a href="#">{c.contactHours || DEFAULT_CONTENT.contactHours}</a>
+              <h4>Contact</h4>
+              <a href={`tel:${c.contactPhone || DEFAULT_CONTENT.contactPhone}`}>
+                {c.contactPhone || DEFAULT_CONTENT.contactPhone}
+              </a>
+              <a
+                href={`mailto:${c.contactEmail || DEFAULT_CONTENT.contactEmail}`}
+              >
+                {c.contactEmail || DEFAULT_CONTENT.contactEmail}
+              </a>
+              <span
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.55)",
+                  display: "block",
+                  marginTop: 4,
+                }}
+              >
+                {c.contactHours || DEFAULT_CONTENT.contactHours}
+              </span>
             </div>
           </div>
-
           <div className="n-footer-bottom">
-            <span>© 2025 Shree H.S. Model High School, Lucknow. All rights reserved.</span>
-            <span>Designed with ❤ for excellence in education</span>
+            <span>
+              © {new Date().getFullYear()} P.S. Academy Semra Khandoli, Agra.
+              All rights reserved.
+            </span>
+            <span>UP Board Affiliated · Designed with ❤️ for Education</span>
           </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 };
+
+export default LandingPage;

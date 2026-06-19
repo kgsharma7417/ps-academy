@@ -4,28 +4,42 @@ import { useAuth } from "../context/AuthContext";
 
 // ─── Icons (inline SVG to avoid extra deps) ──────────────────────────────────
 const Icon = ({ d, size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
     <path d={d} />
   </svg>
 );
 
 const ICONS = {
-  globe: "M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 0c-2.5 2.5-4 5.9-4 10s1.5 7.5 4 10m0-20c2.5 2.5 4 5.9 4 10s-1.5 7.5-4 10M2 12h20",
+  globe:
+    "M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 0c-2.5 2.5-4 5.9-4 10s1.5 7.5 4 10m0-20c2.5 2.5 4 5.9 4 10s-1.5 7.5-4 10M2 12h20",
   save: "M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z M17 21v-8H7v8 M7 3v5h8",
-  image: "M21 15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M21 15l-5-5L5 21",
+  image:
+    "M21 15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z M8.5 10a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z M21 15l-5-5L5 21",
   stats: "M18 20V10 M12 20V4 M6 20v-6",
-  phone: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z",
+  phone:
+    "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.79 19.79 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z",
   logout: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4 M16 17l5-5-5-5 M21 12H9",
   eye: "M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
   check: "M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4 12 14.01l-3-3",
   plus: "M12 5v14 M5 12h14",
-  trash: "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2",
+  trash:
+    "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2",
   edit: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
   link: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
   upload: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12",
   layout: "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
   bell: "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0",
-  users: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
+  users:
+    "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
   grid: "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
   arrowL: "M19 12H5 M12 19l-7-7 7-7",
   x: "M18 6 6 18 M6 6l12 12",
@@ -33,63 +47,131 @@ const ICONS = {
   move: "M5 9l-3 3 3 3 M9 5l3-3 3 3 M15 19l-3 3-3-3 M19 9l3 3-3 3 M2 12h20 M12 2v20",
 };
 
-// ─── Default content (mirrors LandingPage.jsx) ────────────────────────────────
+// ─── Default content (mirrors LandingPage.jsx — PS Academy Semra Khandoli, Agra) ───
 const DEFAULT_CONTENT = {
   // Hero
-  heroTitle: "Shree H.S. Model\nHigh School",
-  heroSubtitle: "Nurturing minds and building character since 2001. A UP Board-affiliated school in Agra committed to academic excellence, moral values, and all-round development.",
-  heroImageUrl: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop",
-  ctaText: "Enquire for Admission →",
-  ctaSecondary: "Know Our School",
+  heroTitle: "P.S. Academy",
+  heroSubtitle:
+    "P.S. Academy Semra Khandoli, Agra mein ek up-board se affiliates school hai. Hum bachon ki shiksha aur unke sarvagina vikas ke liye pratibaddh hain — academic excellence, naitik mulya, aur holistic development.",
+  heroImageUrl:
+    "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop",
+  ctaText: "Admission ke liye sampark karein →",
+  ctaSecondary: "Hamare School ko jaanein",
   heroBadge: "Admissions Open 2025–26",
   // Stats
-  statsStudents: 1200,
-  statsFaculty: 95,
+  statsStudents: 4050,
+  statsFaculty: 330,
   statsLabs: 12,
-  statsPassRate: 98,
-  statsYears: 23,
+  statsPassRate: 96,
+  statsYears: 20,
   // Slider images
   slides: [
-    { src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop", caption: "🏫 Shree H.S. Model High School — Agra" },
-    { src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop", caption: "📚 Modern Classrooms for Quality Learning" },
-    { src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=1200&auto=format&fit=crop", caption: "🔬 Science Laboratories — Hands-on Education" },
-    { src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop", caption: "⚽ Sports Ground — All-Round Development" },
+    {
+      src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop",
+      caption: "🏫 P.S. Academy Semra Khandoli — Agra",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop",
+      caption: "📚 Aadhunik Classes — Gyan ki nai pehchan",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=1200&auto=format&fit=crop",
+      caption: "🔬 Science Labs — Practical Shiksha",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop",
+      caption: "⚽ Khel Ka Maidan — Sarvangin Vikas",
+    },
   ],
   // Gallery
   gallery: [
-    { src: "https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?q=80&w=800&auto=format&fit=crop", caption: "📍 Main School Building" },
-    { src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop", caption: "🏫 Modern Classrooms" },
-    { src: "https://images.unsplash.com/photo-1603354350317-6f7aaa5911c5?q=80&w=600&auto=format&fit=crop", caption: "📚 School Library" },
-    { src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=800&auto=format&fit=crop", caption: "🔬 Science Laboratory" },
-    { src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600&auto=format&fit=crop", caption: "⚽ Sports Ground" },
-    { src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&auto=format&fit=crop", caption: "🎭 Annual Cultural Program" },
+    {
+      src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop",
+      caption: "📍 P.S. Academy Campus — Semra Khandoli",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop",
+      caption: "🏫 Aadhunik Classes",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=600&auto=format&fit=crop",
+      caption: "🔬 Science Laboratory",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600&auto=format&fit=crop",
+      caption: "⚽ Sports Ground",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&auto=format&fit=crop",
+      caption: "🎭 Varshik Samaroh",
+    },
   ],
   // Principal quote strip
-  principalQuoteShort: "Education is not merely about marks — it is about kindling the flame of curiosity, discipline, and humanity in every child. At Shree H.S. Model High School, we believe every student carries infinite potential.",
-  principalName: "Principal Rang Bahadur Singh Chauhan",
-  principalFull: `"It is with immense pride and humility that I address the Shree H.S. Model High School family. Since our founding in 2001, we have strived to create an environment where every child feels valued, challenged, and inspired. Our school is not merely a place of academic learning — it is a second home where students develop not only their intellect, but their character, resilience, and compassion.\n\nWe believe in the holistic development of each student — through rigorous academics, creative arts, physical education, and above all, the inculcation of strong moral values. Together, we will shape the leaders and citizens of tomorrow."`,
-  managerName: "Dr. P.S. Chauhan",
-  managerFull: `"As the Manager of Shree H.S. Model High School, my commitment has always been to provide an institution that is accessible, affordable, and of the highest quality for the students of Agra. We have invested in modern classrooms, qualified teachers, and an environment that promotes curiosity and growth. Our students are our greatest achievement."`,
+  principalQuoteShort:
+    "Shiksha ka uddeshya sirf marks nahi hai — yeh har bachche mein jigyasa, anushasan aur manavta ki lau jalane ka madhyam hai. P.S. Academy mein hum pratyek vidyarthi mein apni mahima pahchanne mein vishwas rakhte hain.",
+  principalName: "Principal - P.S. Academy",
+  principalFull: `Shiksha ka uddeshya sirf akademik vikas nahi, balki ek aisa vatavaran banana hai jahan vidyarthi aur shikshak dono apne lakshya ko prapt kar sake. P.S. Academy Semra Khandoli, Agra mein hum bachchon ko theory aur practical dono mein maharat hasil karne ka avsar pradan karte hain. Humari jimmedari hai ki har bachche ko aise sthal pradan karein jo unki shiksha aur sahavidyarthi vikas mein sahayak ho.`,
+  managerName: "P.S. Academy Prabandhan Samiti",
+  managerFull: `P.S. Academy Semra Khandoli, Agra ka prabandhan samiti hamesha se ek aisi shikshan sanstha pradan karne ke liye pratibaddh raha hai jo sabke liye sulabh, sasta aur uttam koti ki ho. Humne aadhunik classes, yogya teachers aur ek aisa mahaul banaya hai jo jigyasa aur vikas ko badhava de. Hamare vidyarthi hi hamari sabse badi uplabdhi hain.`,
   // Contact
-  contactAddress: "Shree H.S. Model High School, Agra, Uttar Pradesh – 282001",
-  contactPhone: "+91 562 234-5678",
-  contactPhoneAdmission: "+91 562 234-5679",
-  contactEmail: "info@shreehsmodelhs.edu.in",
-  contactHours: "Mon – Sat: 8:00 AM – 2:30 PM",
+  contactAddress: "P.S. Academy, Semra Khandoli, Agra, Uttar Pradesh",
+  contactPhone: "+91 99271 70258",
+  contactPhoneAdmission: "+91 99271 70258",
+  contactEmail: "psacademysemra@gmail.com",
+  contactHours: "Mon – Sat: 8:00 AM – 3:00 PM",
   // Notices
   notices: [
-    { day: "20", mon: "Jun", title: "Class 10 & 12 Final Exam Schedule Released", desc: "UP Board final examination timetable for Class 10 and 12 has been released. Students are advised to collect their admit cards from the school office by 25 June.", tag: "exam" },
-    { day: "15", mon: "Jun", title: "Independence Day Celebration – 15 August", desc: "All students and staff are requested to be present on 15th August at 7:00 AM for flag hoisting ceremony. Cultural programs will follow. White uniform is compulsory.", tag: "event" },
-    { day: "10", mon: "Jun", title: "Parent-Teacher Meeting – Class 6 to 10", desc: "A Parent-Teacher meeting for classes 6 to 10 will be held on 22nd June (Saturday) between 9 AM – 1 PM. Parents are requested to attend and collect their child's progress report.", tag: "meeting" },
-    { day: "05", mon: "Jun", title: "Half-Yearly Holiday Notice", desc: "School will remain closed from 20 June to 30 June on account of summer vacation. Classes will resume on 1st July.", tag: "holiday" },
-    { day: "01", mon: "Jun", title: "Admission Open for 2025–26 Academic Session", desc: "Admissions are now open for Class 1 to Class 11. Contact the school office between 9 AM to 2 PM on working days. Documents: Birth certificate, marksheet, Aadhar card.", tag: "event" },
+    {
+      day: "01",
+      mon: "Apr",
+      title: "Naye Shiksha Sesh 2025–26 ke liye Admission Khule",
+      desc: "Class 1 se 11 tak admission khule hain. School office se sampark karein 9 AM se 2 PM ke beech. Aavashyak dastawej: Birth certificate, marksheet, Aadhar card.",
+      tag: "event",
+    },
+    {
+      day: "15",
+      mon: "Aug",
+      title: "Swatantrata Diwas Samaroh – 15 August",
+      desc: "Sabhi vidyarthi aur staff 15 August ko 7:00 AM par upasthit rahein. Jhanda fahran aur sanskritik karyakram honge. White uniform anivarya hai.",
+      tag: "event",
+    },
+    {
+      day: "10",
+      mon: "Jun",
+      title: "Parent-Teacher Meeting – Class 6 se 10",
+      desc: "Classes 6 se 10 ki PTM 22 June (Shanivar) 9 AM – 1 PM ke beech hogi. Abhibhavak apne bachche ki progress report lena na bhoolen.",
+      tag: "meeting",
+    },
+    {
+      day: "05",
+      mon: "Jun",
+      title: "Garmi ki Chhuttiyan",
+      desc: "Vidyalay 20 June se 30 June tak garmi ki chhuttiyon ke liye band rahega. Classes 1 July se punah suru hongi.",
+      tag: "holiday",
+    },
   ],
   // Why-us
   whyCards: [
-    { icon: "🏆", title: "Academic Excellence", desc: "Consistently 98%+ result in UP Board exams with top district rankers every year." },
-    { icon: "🕉️", title: "Moral Values", desc: "Character building through daily prayers, Sanskrit shloka recitation, and Yoga sessions." },
-    { icon: "🔬", title: "Modern Labs", desc: "Physics, Chemistry, Biology & Computer labs with modern equipment for hands-on learning." },
-    { icon: "⚽", title: "Sports & Arts", desc: "Annual sports meet, cultural programs, drawing & elocution competitions — talent nurtured." },
+    {
+      icon: "🏆",
+      title: "Academic Excellence",
+      desc: "UP Board exams mein lagatar behtarin parinam — 96%+ pass rate har saal.",
+    },
+    {
+      icon: "🕉️",
+      title: "Naitik Mulya",
+      desc: "Pratidin prarthana, yog aur sanskrit shlokon ke through charitra nirman.",
+    },
+    {
+      icon: "🔬",
+      title: "Aadhunik Labs",
+      desc: "Physics, Chemistry, Biology aur Computer labs — vyavaharik shiksha ke liye.",
+    },
+    {
+      icon: "⚽",
+      title: "Khel aur Kala",
+      desc: "Varshik khel samaroh, sanskritik karyakram, drawing competition — pratibha ki pehchan.",
+    },
   ],
 };
 
@@ -293,54 +375,177 @@ const STYLES = `
   .wad-reset-btn:hover { background: var(--red-l); color: var(--red); border-color: #fecaca; }
 `;
 
+const STORAGE_KEY = "school_erp_landing_content_v2";
+
 // ─── Image Picker Component ───────────────────────────────────────────────────
-function ImagePicker({ value, onChange, label, tall = false, showCaption = false, caption = "", onCaptionChange }) {
-  const [mode, setMode] = useState("url"); // "url" | "gallery"
+function ImagePicker({
+  value,
+  onChange,
+  label,
+  tall = false,
+  showCaption = false,
+  caption = "",
+  onCaptionChange,
+}) {
+  const [mode, setMode] = useState("url"); // "url" | "gallery" | "upload"
   const [urlInput, setUrlInput] = useState(value || "");
   const [imgError, setImgError] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  // FIX: keep urlInput in sync whenever the parent-controlled `value`
+  // changes from outside this component (e.g. switching sections,
+  // editing a different slide/gallery item, or loading saved content).
+  // Without this, the URL field could show stale/empty text even
+  // though the underlying value was updated, making edits look like
+  // they "didn't save" when they actually did.
+  useEffect(() => {
+    setUrlInput(value || "");
+    setImgError(false);
+  }, [value]);
 
   const GALLERY_IMAGES = [
-    { src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=800&auto=format&fit=crop", label: "School Building 1" },
-    { src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop", label: "School Building 2" },
-    { src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop", label: "Classroom" },
-    { src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=800&auto=format&fit=crop", label: "Science Lab" },
-    { src: "https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?q=80&w=800&auto=format&fit=crop", label: "Main Building" },
-    { src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=800&auto=format&fit=crop", label: "Sports Ground" },
-    { src: "https://images.unsplash.com/photo-1603354350317-6f7aaa5911c5?q=80&w=800&auto=format&fit=crop", label: "Library" },
-    { src: "https://images.unsplash.com/photo-1571260899304-425eee4c7efc?q=80&w=800&auto=format&fit=crop", label: "Students" },
-    { src: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop", label: "Study" },
-    { src: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=800&auto=format&fit=crop", label: "Teachers" },
-    { src: "https://images.unsplash.com/photo-1562564055-71e051d33c19?q=80&w=800&auto=format&fit=crop", label: "Event 1" },
-    { src: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop", label: "Event 2" },
+    {
+      src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=800&auto=format&fit=crop",
+      label: "School Building 1",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop",
+      label: "School Building 2",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop",
+      label: "Classroom",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=800&auto=format&fit=crop",
+      label: "Science Lab",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1591474200742-8e512e6f98f8?q=80&w=800&auto=format&fit=crop",
+      label: "Main Building",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=800&auto=format&fit=crop",
+      label: "Sports Ground",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1603354350317-6f7aaa5911c5?q=80&w=800&auto=format&fit=crop",
+      label: "Library",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1571260899304-425eee4c7efc?q=80&w=800&auto=format&fit=crop",
+      label: "Students",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop",
+      label: "Study",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=800&auto=format&fit=crop",
+      label: "Teachers",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1562564055-71e051d33c19?q=80&w=800&auto=format&fit=crop",
+      label: "Event 1",
+    },
+    {
+      src: "https://images.unsplash.com/photo-1588072432836-e10032774350?q=80&w=800&auto=format&fit=crop",
+      label: "Event 2",
+    },
   ];
 
-  const applyUrl = () => { if (urlInput.trim()) { onChange(urlInput.trim()); setImgError(false); } };
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setImgError(true);
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File size 5MB se zyada hai. Chhota file select karein.");
+      return;
+    }
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      onChange(base64);
+      setUrlInput(base64);
+      setImgError(false);
+      setUploading(false);
+    };
+    reader.onerror = () => {
+      setImgError(true);
+      setUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const applyUrl = () => {
+    if (urlInput.trim()) {
+      onChange(urlInput.trim());
+      setImgError(false);
+    }
+  };
 
   return (
     <div>
       {label && <label className="wad-label">{label}</label>}
       <div className="wad-img-picker">
-        {/* Mode toggle */}
+        {/* Mode toggle - 3 tabs: URL, Gallery, Upload */}
         <div style={{ display: "flex", borderBottom: "1px solid var(--line)" }}>
-          {["url", "gallery"].map(m => (
-            <button key={m} onClick={() => setMode(m)} style={{
-              flex: 1, padding: "8px", border: "none", background: mode === m ? "var(--blue-l)" : "var(--white)",
-              color: mode === m ? "var(--blue)" : "var(--ink3)", fontFamily: "inherit", fontSize: 12, fontWeight: 600,
-              cursor: "pointer", borderBottom: mode === m ? "2px solid var(--blue)" : "2px solid transparent",
-              textTransform: "capitalize"
-            }}>
-              {m === "url" ? "🔗 URL se daalo" : "🖼️ Gallery se chuno"}
+          {["url", "gallery", "upload"].map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              style={{
+                flex: 1,
+                padding: "8px",
+                border: "none",
+                background: mode === m ? "var(--blue-l)" : "var(--white)",
+                color: mode === m ? "var(--blue)" : "var(--ink3)",
+                fontFamily: "inherit",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                borderBottom:
+                  mode === m
+                    ? "2px solid var(--blue)"
+                    : "2px solid transparent",
+                textTransform: "capitalize",
+              }}
+            >
+              {m === "url"
+                ? "🔗 URL se daalo"
+                : m === "gallery"
+                  ? "🖼️ Gallery se chuno"
+                  : "📁 Computer se upload karo"}
             </button>
           ))}
         </div>
 
         {/* Preview */}
         {value && !imgError ? (
-          <img src={value} alt="preview" className={`wad-img-preview${tall ? " tall" : ""}`} onError={() => setImgError(true)} />
+          <img
+            src={value}
+            alt="preview"
+            className={`wad-img-preview${tall ? " tall" : ""}`}
+            onError={() => setImgError(true)}
+          />
         ) : (
           <div className="wad-img-empty">
             <Icon d={ICONS.image} size={32} />
-            <span>{imgError ? "Image load nahi hui — naya URL daalo" : "Koi image select nahi ki"}</span>
+            <span>
+              {imgError
+                ? "Image load nahi hui — naya URL daalo"
+                : "Koi image select nahi ki"}
+            </span>
           </div>
         )}
 
@@ -352,34 +557,193 @@ function ImagePicker({ value, onChange, label, tall = false, showCaption = false
               type="url"
               placeholder="https://example.com/image.jpg"
               value={urlInput}
-              onChange={e => setUrlInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && applyUrl()}
+              onChange={(e) => setUrlInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && applyUrl()}
             />
-            <button className="wad-btn primary" onClick={applyUrl}>Apply</button>
-            {value && <button className="wad-btn danger sm icon-only" onClick={() => { onChange(""); setUrlInput(""); setImgError(false); }}><Icon d={ICONS.x} size={13} /></button>}
+            <button className="wad-btn primary" onClick={applyUrl}>
+              Apply
+            </button>
+            {value && (
+              <button
+                className="wad-btn danger sm icon-only"
+                onClick={() => {
+                  onChange("");
+                  setUrlInput("");
+                  setImgError(false);
+                }}
+              >
+                <Icon d={ICONS.x} size={13} />
+              </button>
+            )}
           </div>
         )}
 
         {/* Gallery mode */}
         {mode === "gallery" && (
           <div style={{ padding: 12 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7, maxHeight: 260, overflowY: "auto" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: 7,
+                maxHeight: 260,
+                overflowY: "auto",
+              }}
+            >
               {GALLERY_IMAGES.map((g, i) => (
-                <div key={i} onClick={() => { onChange(g.src); setUrlInput(g.src); setImgError(false); }}
-                  style={{ borderRadius: 7, overflow: "hidden", cursor: "pointer", border: value === g.src ? "2px solid var(--blue)" : "2px solid transparent", aspectRatio: "4/3", position: "relative" }}>
-                  <img src={g.src} alt={g.label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  {value === g.src && <div style={{ position: "absolute", top: 3, right: 3, background: "var(--blue)", color: "#fff", borderRadius: "50%", width: 18, height: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>✓</div>}
-                  <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,.6)", color: "#fff", fontSize: 9, padding: "3px 5px" }}>{g.label}</div>
+                <div
+                  key={i}
+                  onClick={() => {
+                    onChange(g.src);
+                    setUrlInput(g.src);
+                    setImgError(false);
+                  }}
+                  style={{
+                    borderRadius: 7,
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    border:
+                      value === g.src
+                        ? "2px solid var(--blue)"
+                        : "2px solid transparent",
+                    aspectRatio: "4/3",
+                    position: "relative",
+                  }}
+                >
+                  <img
+                    src={g.src}
+                    alt={g.label}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                  {value === g.src && (
+                    <div
+                      style={{
+                        position: "absolute",
+                        top: 3,
+                        right: 3,
+                        background: "var(--blue)",
+                        color: "#fff",
+                        borderRadius: "50%",
+                        width: 18,
+                        height: 18,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 10,
+                      }}
+                    >
+                      ✓
+                    </div>
+                  )}
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      background: "rgba(0,0,0,.6)",
+                      color: "#fff",
+                      fontSize: 9,
+                      padding: "3px 5px",
+                    }}
+                  >
+                    {g.label}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
 
+        {/* Upload mode - Local file picker */}
+        {mode === "upload" && (
+          <div style={{ padding: 16, textAlign: "center" }}>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              style={{ display: "none" }}
+            />
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              style={{
+                border: "2px dashed var(--line)",
+                borderRadius: 12,
+                padding: "40px 20px",
+                cursor: "pointer",
+                background: "var(--surface)",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = "var(--blue)";
+                e.currentTarget.style.background = "var(--blue-l)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = "var(--line)";
+                e.currentTarget.style.background = "var(--surface)";
+              }}
+            >
+              <Icon d={ICONS.upload} size={40} />
+              <p
+                style={{
+                  marginTop: 12,
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "var(--ink2)",
+                }}
+              >
+                {uploading
+                  ? "Upload ho raha hai..."
+                  : "Click karo ya image yahan drag karo"}
+              </p>
+              <p style={{ marginTop: 4, fontSize: 11, color: "var(--ink3)" }}>
+                JPG, PNG, GIF, WebP — Max 5MB
+              </p>
+            </div>
+            {uploading && (
+              <div
+                style={{
+                  marginTop: 12,
+                  color: "var(--blue)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                }}
+              >
+                ⏳ Image load ho rahi hai...
+              </div>
+            )}
+            {value && mode === "upload" && (
+              <button
+                className="wad-btn danger sm"
+                style={{ marginTop: 8 }}
+                onClick={() => {
+                  onChange("");
+                  setUrlInput("");
+                  setImgError(false);
+                }}
+              >
+                <Icon d={ICONS.x} size={13} /> Hatayein
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Caption field */}
         {showCaption && (
-          <div style={{ padding: "10px 14px", borderTop: "1px solid var(--line)" }}>
-            <input className="wad-input" placeholder="Caption text (e.g. 📍 Main School Building)" value={caption} onChange={e => onCaptionChange(e.target.value)} />
+          <div
+            style={{ padding: "10px 14px", borderTop: "1px solid var(--line)" }}
+          >
+            <input
+              className="wad-input"
+              placeholder="Caption text (e.g. 📍 Main School Building)"
+              value={caption}
+              onChange={(e) => onCaptionChange(e.target.value)}
+            />
           </div>
         )}
       </div>
@@ -389,40 +753,91 @@ function ImagePicker({ value, onChange, label, tall = false, showCaption = false
 
 // ─── Notice Modal ─────────────────────────────────────────────────────────────
 function NoticeModal({ notice, onSave, onClose }) {
-  const [form, setForm] = useState(notice || { day: "", mon: "Jan", title: "", desc: "", tag: "event" });
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
-  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const [form, setForm] = useState(
+    notice || { day: "", mon: "Jan", title: "", desc: "", tag: "event" },
+  );
+  const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
+  const MONTHS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
   return (
-    <div className="wad-modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div
+      className="wad-modal-bg"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="wad-modal">
         <div className="wad-modal-header">
-          <div className="wad-modal-title">📋 {notice ? "Notice Edit karo" : "Naya Notice"}</div>
-          <button className="wad-btn sm icon-only" onClick={onClose}><Icon d={ICONS.x} size={14} /></button>
+          <div className="wad-modal-title">
+            📋 {notice ? "Notice Edit karo" : "Naya Notice"}
+          </div>
+          <button className="wad-btn sm icon-only" onClick={onClose}>
+            <Icon d={ICONS.x} size={14} />
+          </button>
         </div>
         <div className="wad-modal-body">
           <div className="wad-grid-2" style={{ marginBottom: 14 }}>
             <div className="wad-field">
               <label className="wad-label">Din (Day)</label>
-              <input className="wad-input" type="number" min="1" max="31" value={form.day} onChange={e => set("day", e.target.value)} placeholder="20" />
+              <input
+                className="wad-input"
+                type="number"
+                min="1"
+                max="31"
+                value={form.day}
+                onChange={(e) => set("day", e.target.value)}
+                placeholder="20"
+              />
             </div>
             <div className="wad-field">
               <label className="wad-label">Mahina (Month)</label>
-              <select className="wad-select" value={form.mon} onChange={e => set("mon", e.target.value)}>
-                {MONTHS.map(m => <option key={m}>{m}</option>)}
+              <select
+                className="wad-select"
+                value={form.mon}
+                onChange={(e) => set("mon", e.target.value)}
+              >
+                {MONTHS.map((m) => (
+                  <option key={m}>{m}</option>
+                ))}
               </select>
             </div>
           </div>
           <div className="wad-field">
             <label className="wad-label">Notice Heading</label>
-            <input className="wad-input" value={form.title} onChange={e => set("title", e.target.value)} placeholder="Exam schedule, event, holiday..." />
+            <input
+              className="wad-input"
+              value={form.title}
+              onChange={(e) => set("title", e.target.value)}
+              placeholder="Exam schedule, event, holiday..."
+            />
           </div>
           <div className="wad-field">
             <label className="wad-label">Vivaran (Description)</label>
-            <textarea className="wad-textarea" rows={3} value={form.desc} onChange={e => set("desc", e.target.value)} placeholder="Notice ki poori jankari..." />
+            <textarea
+              className="wad-textarea"
+              rows={3}
+              value={form.desc}
+              onChange={(e) => set("desc", e.target.value)}
+              placeholder="Notice ki poori jankari..."
+            />
           </div>
           <div className="wad-field">
             <label className="wad-label">Category</label>
-            <select className="wad-select" value={form.tag} onChange={e => set("tag", e.target.value)}>
+            <select
+              className="wad-select"
+              value={form.tag}
+              onChange={(e) => set("tag", e.target.value)}
+            >
               <option value="exam">📝 Exam</option>
               <option value="event">🎉 Event</option>
               <option value="meeting">👨‍👩‍👧 PTM / Meeting</option>
@@ -431,8 +846,15 @@ function NoticeModal({ notice, onSave, onClose }) {
           </div>
         </div>
         <div className="wad-modal-footer">
-          <button className="wad-btn" onClick={onClose}>Cancel</button>
-          <button className="wad-btn primary" onClick={() => { if (form.title && form.day) onSave(form); }}>
+          <button className="wad-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="wad-btn primary"
+            onClick={() => {
+              if (form.title && form.day) onSave(form);
+            }}
+          >
             <Icon d={ICONS.save} size={13} /> Save Notice
           </button>
         </div>
@@ -445,18 +867,39 @@ function NoticeModal({ notice, onSave, onClose }) {
 function SlideModal({ slide, onSave, onClose }) {
   const [form, setForm] = useState(slide || { src: "", caption: "" });
   return (
-    <div className="wad-modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div
+      className="wad-modal-bg"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="wad-modal">
         <div className="wad-modal-header">
-          <div className="wad-modal-title">🖼️ {slide ? "Slide Edit karo" : "Naya Slide Jodo"}</div>
-          <button className="wad-btn sm icon-only" onClick={onClose}><Icon d={ICONS.x} size={14} /></button>
+          <div className="wad-modal-title">
+            🖼️ {slide ? "Slide Edit karo" : "Naya Slide Jodo"}
+          </div>
+          <button className="wad-btn sm icon-only" onClick={onClose}>
+            <Icon d={ICONS.x} size={14} />
+          </button>
         </div>
         <div className="wad-modal-body">
-          <ImagePicker value={form.src} onChange={src => setForm(f => ({ ...f, src }))} label="Slide Image" showCaption caption={form.caption} onCaptionChange={caption => setForm(f => ({ ...f, caption }))} />
+          <ImagePicker
+            value={form.src}
+            onChange={(src) => setForm((f) => ({ ...f, src }))}
+            label="Slide Image"
+            showCaption
+            caption={form.caption}
+            onCaptionChange={(caption) => setForm((f) => ({ ...f, caption }))}
+          />
         </div>
         <div className="wad-modal-footer">
-          <button className="wad-btn" onClick={onClose}>Cancel</button>
-          <button className="wad-btn primary" onClick={() => { if (form.src) onSave(form); }}>
+          <button className="wad-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="wad-btn primary"
+            onClick={() => {
+              if (form.src) onSave(form);
+            }}
+          >
             <Icon d={ICONS.save} size={13} /> Save Slide
           </button>
         </div>
@@ -469,18 +912,40 @@ function SlideModal({ slide, onSave, onClose }) {
 function GalleryModal({ item, onSave, onClose }) {
   const [form, setForm] = useState(item || { src: "", caption: "" });
   return (
-    <div className="wad-modal-bg" onClick={e => e.target === e.currentTarget && onClose()}>
+    <div
+      className="wad-modal-bg"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
       <div className="wad-modal">
         <div className="wad-modal-header">
-          <div className="wad-modal-title">🖼️ {item ? "Gallery Photo Edit" : "Naya Gallery Photo"}</div>
-          <button className="wad-btn sm icon-only" onClick={onClose}><Icon d={ICONS.x} size={14} /></button>
+          <div className="wad-modal-title">
+            🖼️ {item ? "Gallery Photo Edit" : "Naya Gallery Photo"}
+          </div>
+          <button className="wad-btn sm icon-only" onClick={onClose}>
+            <Icon d={ICONS.x} size={14} />
+          </button>
         </div>
         <div className="wad-modal-body">
-          <ImagePicker value={form.src} onChange={src => setForm(f => ({ ...f, src }))} label="Photo" tall showCaption caption={form.caption} onCaptionChange={caption => setForm(f => ({ ...f, caption }))} />
+          <ImagePicker
+            value={form.src}
+            onChange={(src) => setForm((f) => ({ ...f, src }))}
+            label="Photo"
+            tall
+            showCaption
+            caption={form.caption}
+            onCaptionChange={(caption) => setForm((f) => ({ ...f, caption }))}
+          />
         </div>
         <div className="wad-modal-footer">
-          <button className="wad-btn" onClick={onClose}>Cancel</button>
-          <button className="wad-btn primary" onClick={() => { if (form.src) onSave(form); }}>
+          <button className="wad-btn" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="wad-btn primary"
+            onClick={() => {
+              if (form.src) onSave(form);
+            }}
+          >
             <Icon d={ICONS.save} size={13} /> Save Photo
           </button>
         </div>
@@ -501,14 +966,17 @@ export const WebAdminDashboard = () => {
 
   useEffect(() => {
     try {
-      const saved = localStorage.getItem("school_erp_landing_content_v2");
+      const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) setContent({ ...DEFAULT_CONTENT, ...JSON.parse(saved) });
-    } catch { }
+    } catch {}
   }, []);
 
-  const set = (key, val) => { setContent(c => ({ ...c, [key]: val })); setUnsaved(true); };
+  const set = (key, val) => {
+    setContent((c) => ({ ...c, [key]: val }));
+    setUnsaved(true);
+  };
   const setNested = (key, idx, field, val) => {
-    setContent(c => {
+    setContent((c) => {
       const arr = [...(c[key] || [])];
       arr[idx] = { ...arr[idx], [field]: val };
       return { ...c, [key]: arr };
@@ -522,59 +990,158 @@ export const WebAdminDashboard = () => {
   };
 
   const handleSave = () => {
-    localStorage.setItem("school_erp_landing_content_v2", JSON.stringify(content));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
+    } catch (err) {
+      // localStorage can throw (quota exceeded, private-mode restrictions, etc.)
+      // Surface this clearly instead of silently pretending the save worked.
+      showToast(
+        "⚠️ Save fail hui — storage full ya blocked ho sakta hai.",
+        "error",
+      );
+      console.error("Failed to save landing content:", err);
+      return;
+    }
     setUnsaved(false);
     showToast("✓ Saari changes save ho gayi! Landing page update ho gaya.");
+    // Dispatch custom event so LandingPage in same tab can pick up changes immediately
+    window.dispatchEvent(
+      new CustomEvent("school-erp-content-updated", {
+        detail: { timestamp: Date.now() },
+      }),
+    );
   };
 
   const handleReset = () => {
-    if (window.confirm("Sab kuch default pe reset karna chahte ho? Saari changes chali jayengi.")) {
+    if (
+      window.confirm(
+        "Sab kuch default pe reset karna chahte ho? Saari changes chali jayengi.",
+      )
+    ) {
       setContent(DEFAULT_CONTENT);
-      localStorage.setItem("school_erp_landing_content_v2", JSON.stringify(DEFAULT_CONTENT));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONTENT));
       setUnsaved(false);
       showToast("Reset complete!", "success");
+      window.dispatchEvent(
+        new CustomEvent("school-erp-content-updated", {
+          detail: { timestamp: Date.now() },
+        }),
+      );
     }
   };
 
   // Slides CRUD
-  const addSlide = (slide) => { set("slides", [...(content.slides || []), slide]); setModal(null); };
-  const updateSlide = (idx, slide) => { const arr = [...content.slides]; arr[idx] = slide; set("slides", arr); setModal(null); };
-  const deleteSlide = (idx) => { if (window.confirm("Ye slide delete karna chahte ho?")) set("slides", content.slides.filter((_, i) => i !== idx)); };
+  const addSlide = (slide) => {
+    set("slides", [...(content.slides || []), slide]);
+    setModal(null);
+  };
+  const updateSlide = (idx, slide) => {
+    const arr = [...content.slides];
+    arr[idx] = slide;
+    set("slides", arr);
+    setModal(null);
+  };
+  const deleteSlide = (idx) => {
+    if (window.confirm("Ye slide delete karna chahte ho?"))
+      set(
+        "slides",
+        content.slides.filter((_, i) => i !== idx),
+      );
+  };
 
   // Gallery CRUD
-  const addGallery = (item) => { set("gallery", [...(content.gallery || []), item]); setModal(null); };
-  const updateGallery = (idx, item) => { const arr = [...content.gallery]; arr[idx] = item; set("gallery", arr); setModal(null); };
-  const deleteGallery = (idx) => { if (window.confirm("Ye photo delete karna chahte ho?")) set("gallery", content.gallery.filter((_, i) => i !== idx)); };
+  const addGallery = (item) => {
+    set("gallery", [...(content.gallery || []), item]);
+    setModal(null);
+  };
+  const updateGallery = (idx, item) => {
+    const arr = [...content.gallery];
+    arr[idx] = item;
+    set("gallery", arr);
+    setModal(null);
+  };
+  const deleteGallery = (idx) => {
+    if (window.confirm("Ye photo delete karna chahte ho?"))
+      set(
+        "gallery",
+        content.gallery.filter((_, i) => i !== idx),
+      );
+  };
 
   // Notices CRUD
-  const addNotice = (n) => { set("notices", [n, ...(content.notices || [])]); setModal(null); };
-  const updateNotice = (idx, n) => { const arr = [...content.notices]; arr[idx] = n; set("notices", arr); setModal(null); };
-  const deleteNotice = (idx) => { if (window.confirm("Ye notice delete karna chahte ho?")) set("notices", content.notices.filter((_, i) => i !== idx)); };
+  const addNotice = (n) => {
+    set("notices", [n, ...(content.notices || [])]);
+    setModal(null);
+  };
+  const updateNotice = (idx, n) => {
+    const arr = [...content.notices];
+    arr[idx] = n;
+    set("notices", arr);
+    setModal(null);
+  };
+  const deleteNotice = (idx) => {
+    if (window.confirm("Ye notice delete karna chahte ho?"))
+      set(
+        "notices",
+        content.notices.filter((_, i) => i !== idx),
+      );
+  };
 
   const NAV = [
     { id: "overview", label: "Overview", icon: ICONS.layout, color: "#3b82f6" },
     { id: "hero", label: "Hero Section", icon: ICONS.image, color: "#8b5cf6" },
-    { id: "stats", label: "Stats / Counters", icon: ICONS.stats, color: "#10b981" },
+    {
+      id: "stats",
+      label: "Stats / Counters",
+      icon: ICONS.stats,
+      color: "#10b981",
+    },
     { id: "slides", label: "Image Slider", icon: ICONS.move, color: "#f59e0b" },
     { id: "gallery", label: "Gallery", icon: ICONS.grid, color: "#ec4899" },
-    { id: "notices", label: "Notice Board", icon: ICONS.bell, color: "#ef4444" },
-    { id: "principal", label: "Principal / About", icon: ICONS.users, color: "#6366f1" },
+    {
+      id: "notices",
+      label: "Notice Board",
+      icon: ICONS.bell,
+      color: "#ef4444",
+    },
+    {
+      id: "principal",
+      label: "Principal / About",
+      icon: ICONS.users,
+      color: "#6366f1",
+    },
     { id: "why", label: "Why Choose Us", icon: ICONS.check, color: "#14b8a6" },
-    { id: "contact", label: "Contact / Footer", icon: ICONS.phone, color: "#f97316" },
+    {
+      id: "contact",
+      label: "Contact / Footer",
+      icon: ICONS.phone,
+      color: "#f97316",
+    },
   ];
 
-  const SECTION_LABELS = { overview: "Overview", hero: "Hero Section", stats: "Stats", slides: "Image Slider", gallery: "Gallery", notices: "Notice Board", principal: "Principal / About", why: "Why Choose Us", contact: "Contact" };
+  const SECTION_LABELS = {
+    overview: "Overview",
+    hero: "Hero Section",
+    stats: "Stats",
+    slides: "Image Slider",
+    gallery: "Gallery",
+    notices: "Notice Board",
+    principal: "Principal / About",
+    why: "Why Choose Us",
+    contact: "Contact",
+  };
 
   return (
     <>
       <style>{STYLES}</style>
       <div className="wad-wrap">
-
         {/* ── Sidebar ── */}
         <aside className="wad-sidebar">
           <div className="wad-logo">
             <div className="wad-logo-top">
-              <div className="wad-logo-icon"><Icon d={ICONS.globe} size={16} /></div>
+              <div className="wad-logo-icon">
+                <Icon d={ICONS.globe} size={16} />
+              </div>
               <div>
                 <div className="wad-logo-name">Web Admin</div>
                 <div className="wad-logo-sub">Landing Page Control</div>
@@ -583,18 +1150,30 @@ export const WebAdminDashboard = () => {
           </div>
           <nav className="wad-nav">
             <div className="wad-nav-section">Sections</div>
-            {NAV.map(n => (
-              <button key={n.id} className={`wad-nav-btn${section === n.id ? " active" : ""}`} onClick={() => setSection(n.id)}>
-                <div className="nb-icon" style={section === n.id ? {} : { color: n.color }}>
+            {NAV.map((n) => (
+              <button
+                key={n.id}
+                className={`wad-nav-btn${section === n.id ? " active" : ""}`}
+                onClick={() => setSection(n.id)}
+              >
+                <div
+                  className="nb-icon"
+                  style={section === n.id ? {} : { color: n.color }}
+                >
                   <Icon d={n.icon} size={14} />
                 </div>
                 {n.label}
-                {unsaved && section === n.id && <span className="wad-unsaved-dot" />}
+                {unsaved && section === n.id && (
+                  <span className="wad-unsaved-dot" />
+                )}
               </button>
             ))}
           </nav>
           <div className="wad-nav-footer">
-            <button className="wad-nav-footer-btn view" onClick={() => navigate("/")}>
+            <button
+              className="wad-nav-footer-btn view"
+              onClick={() => navigate("/")}
+            >
               <Icon d={ICONS.eye} size={14} /> Live Site dekho
             </button>
             <button className="wad-nav-footer-btn logout" onClick={logout}>
@@ -609,17 +1188,27 @@ export const WebAdminDashboard = () => {
           <div className="wad-topbar">
             <div className="wad-topbar-left">
               <div>
-                <div className="wad-topbar-title">{SECTION_LABELS[section]}</div>
+                <div className="wad-topbar-title">
+                  {SECTION_LABELS[section]}
+                </div>
                 <div className="wad-breadcrumb">
-                  <span>Shree H.S. Model</span>
+                  <span>P.S. Academy</span>
                   <span style={{ color: "var(--line)" }}>›</span>
-                  <span style={{ color: "var(--blue)" }}>{SECTION_LABELS[section]}</span>
-                  {unsaved && <span style={{ color: "var(--amber)", fontWeight: 600 }}>• Unsaved changes</span>}
+                  <span style={{ color: "var(--blue)" }}>
+                    {SECTION_LABELS[section]}
+                  </span>
+                  {unsaved && (
+                    <span style={{ color: "var(--amber)", fontWeight: 600 }}>
+                      • Unsaved changes
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
             <div style={{ display: "flex", gap: 8 }}>
-              <button className="wad-reset-btn" onClick={handleReset}>↺ Reset</button>
+              <button className="wad-reset-btn" onClick={handleReset}>
+                ↺ Reset
+              </button>
               <button className="wad-save-btn" onClick={handleSave}>
                 <Icon d={ICONS.save} size={14} /> Save karo
               </button>
@@ -627,23 +1216,45 @@ export const WebAdminDashboard = () => {
           </div>
 
           <div className="wad-content">
-
             {/* ── OVERVIEW ── */}
             {section === "overview" && (
               <div>
                 <div style={{ marginBottom: 20 }}>
-                  <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}>Landing Page ka poora control yahan hai 👋</h2>
-                  <p style={{ fontSize: 13, color: "var(--ink3)", lineHeight: 1.6 }}>Kisi bhi section pe click karo — hero image, slider, gallery, notices sab edit kar sakte ho. Save karne ke baad live site turant update ho jaata hai.</p>
+                  <h2
+                    style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}
+                  >
+                    Landing Page ka poora control yahan hai 👋
+                  </h2>
+                  <p
+                    style={{
+                      fontSize: 13,
+                      color: "var(--ink3)",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    Kisi bhi section pe click karo — hero image, slider,
+                    gallery, notices sab edit kar sakte ho. Save karne ke baad
+                    live site turant update ho jaata hai.
+                  </p>
                 </div>
                 <div className="wad-overview-grid">
-                  {NAV.filter(n => n.id !== "overview").map(n => (
-                    <div key={n.id} className="wad-ov-card" onClick={() => setSection(n.id)}>
-                      <div className="wad-ov-icon" style={{ background: n.color + "20", color: n.color }}>
+                  {NAV.filter((n) => n.id !== "overview").map((n) => (
+                    <div
+                      key={n.id}
+                      className="wad-ov-card"
+                      onClick={() => setSection(n.id)}
+                    >
+                      <div
+                        className="wad-ov-icon"
+                        style={{ background: n.color + "20", color: n.color }}
+                      >
                         <Icon d={n.icon} size={18} />
                       </div>
                       <div>
                         <div className="wad-ov-label">{n.label}</div>
-                        <div className="wad-ov-sub" style={{ color: n.color }}>Edit →</div>
+                        <div className="wad-ov-sub" style={{ color: n.color }}>
+                          Edit →
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -651,17 +1262,38 @@ export const WebAdminDashboard = () => {
                 <div className="wad-card">
                   <div className="wad-card-header">
                     <div className="wad-card-title">
-                      <div className="ct-icon"><Icon d={ICONS.check} size={13} /></div>
+                      <div className="ct-icon">
+                        <Icon d={ICONS.check} size={13} />
+                      </div>
                       Abhi kya save hua hai
                     </div>
                   </div>
                   <div className="wad-card-body">
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, fontSize: 12, color: "var(--ink2)" }}>
-                      <span>🖼️ <b>{(content.slides || []).length}</b> slides</span>
-                      <span>📷 <b>{(content.gallery || []).length}</b> gallery photos</span>
-                      <span>📋 <b>{(content.notices || []).length}</b> notices</span>
-                      <span>🏆 Pass Rate: <b>{content.statsPassRate}%</b></span>
-                      <span>👨‍🎓 Students: <b>{content.statsStudents}+</b></span>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexWrap: "wrap",
+                        gap: 8,
+                        fontSize: 12,
+                        color: "var(--ink2)",
+                      }}
+                    >
+                      <span>
+                        🖼️ <b>{(content.slides || []).length}</b> slides
+                      </span>
+                      <span>
+                        📷 <b>{(content.gallery || []).length}</b> gallery
+                        photos
+                      </span>
+                      <span>
+                        📋 <b>{(content.notices || []).length}</b> notices
+                      </span>
+                      <span>
+                        🏆 Pass Rate: <b>{content.statsPassRate}%</b>
+                      </span>
+                      <span>
+                        👨‍🎓 Students: <b>{content.statsStudents}+</b>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -673,38 +1305,82 @@ export const WebAdminDashboard = () => {
               <div>
                 <div className="wad-card">
                   <div className="wad-card-header">
-                    <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.image} size={13} /></div>Hero Main Image</div>
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.image} size={13} />
+                      </div>
+                      Hero Main Image
+                    </div>
                   </div>
                   <div className="wad-card-body">
-                    <ImagePicker label="Hero Image (Right side ka photo)" value={content.heroImageUrl} onChange={v => set("heroImageUrl", v)} tall />
+                    <ImagePicker
+                      label="Hero Image (Right side ka photo)"
+                      value={content.heroImageUrl}
+                      onChange={(v) => set("heroImageUrl", v)}
+                      tall
+                    />
                   </div>
                 </div>
 
                 <div className="wad-card">
                   <div className="wad-card-header">
-                    <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.edit} size={13} /></div>Hero Text Content</div>
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.edit} size={13} />
+                      </div>
+                      Hero Text Content
+                    </div>
                   </div>
                   <div className="wad-card-body">
                     <div className="wad-field">
                       <label className="wad-label">Admission Badge Text</label>
-                      <input className="wad-input" value={content.heroBadge} onChange={e => set("heroBadge", e.target.value)} placeholder="Admissions Open 2025–26" />
+                      <input
+                        className="wad-input"
+                        value={content.heroBadge}
+                        onChange={(e) => set("heroBadge", e.target.value)}
+                        placeholder="Admissions Open 2025–26"
+                      />
                     </div>
                     <div className="wad-field">
-                      <label className="wad-label">Hero Headline (Main Title)</label>
-                      <textarea className="wad-textarea" rows={2} value={content.heroTitle} onChange={e => set("heroTitle", e.target.value)} />
+                      <label className="wad-label">
+                        Hero Headline (Main Title)
+                      </label>
+                      <textarea
+                        className="wad-textarea"
+                        rows={2}
+                        value={content.heroTitle}
+                        onChange={(e) => set("heroTitle", e.target.value)}
+                      />
                     </div>
                     <div className="wad-field">
-                      <label className="wad-label">Hero Subtitle (Description)</label>
-                      <textarea className="wad-textarea" rows={3} value={content.heroSubtitle} onChange={e => set("heroSubtitle", e.target.value)} />
+                      <label className="wad-label">
+                        Hero Subtitle (Description)
+                      </label>
+                      <textarea
+                        className="wad-textarea"
+                        rows={3}
+                        value={content.heroSubtitle}
+                        onChange={(e) => set("heroSubtitle", e.target.value)}
+                      />
                     </div>
                     <div className="wad-grid-2">
                       <div className="wad-field">
                         <label className="wad-label">Primary Button Text</label>
-                        <input className="wad-input" value={content.ctaText} onChange={e => set("ctaText", e.target.value)} />
+                        <input
+                          className="wad-input"
+                          value={content.ctaText}
+                          onChange={(e) => set("ctaText", e.target.value)}
+                        />
                       </div>
                       <div className="wad-field">
-                        <label className="wad-label">Secondary Button Text</label>
-                        <input className="wad-input" value={content.ctaSecondary} onChange={e => set("ctaSecondary", e.target.value)} />
+                        <label className="wad-label">
+                          Secondary Button Text
+                        </label>
+                        <input
+                          className="wad-input"
+                          value={content.ctaSecondary}
+                          onChange={(e) => set("ctaSecondary", e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
@@ -716,32 +1392,84 @@ export const WebAdminDashboard = () => {
             {section === "stats" && (
               <div className="wad-card">
                 <div className="wad-card-header">
-                  <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.stats} size={13} /></div>Hero Stats / Counter Numbers</div>
-                  <span style={{ fontSize: 11, color: "var(--ink3)" }}>Hero section mein dikhte hain</span>
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.stats} size={13} />
+                    </div>
+                    Hero Stats / Counter Numbers
+                  </div>
+                  <span style={{ fontSize: 11, color: "var(--ink3)" }}>
+                    Hero section mein dikhte hain
+                  </span>
                 </div>
                 <div className="wad-card-body">
                   <div className="wad-grid-4">
                     {[
-                      { key: "statsStudents", label: "Students Enrolled", suffix: "+" },
-                      { key: "statsFaculty", label: "Expert Faculty", suffix: "+" },
-                      { key: "statsPassRate", label: "Board Pass Rate", suffix: "%" },
-                      { key: "statsYears", label: "Years of Legacy", suffix: "+" },
-                    ].map(s => (
+                      {
+                        key: "statsStudents",
+                        label: "Students Enrolled",
+                        suffix: "+",
+                      },
+                      {
+                        key: "statsFaculty",
+                        label: "Expert Faculty",
+                        suffix: "+",
+                      },
+                      {
+                        key: "statsPassRate",
+                        label: "Board Pass Rate",
+                        suffix: "%",
+                      },
+                      {
+                        key: "statsYears",
+                        label: "Years of Legacy",
+                        suffix: "+",
+                      },
+                    ].map((s) => (
                       <div key={s.key} className="wad-stat-card">
                         <div className="sc-label">{s.label}</div>
                         <input
                           className="wad-input"
                           type="number"
                           value={content[s.key]}
-                          onChange={e => set(s.key, parseInt(e.target.value) || 0)}
-                          style={{ textAlign: "center", fontSize: 22, fontWeight: 700, color: "var(--blue)" }}
+                          onChange={(e) =>
+                            set(s.key, parseInt(e.target.value) || 0)
+                          }
+                          style={{
+                            textAlign: "center",
+                            fontSize: 22,
+                            fontWeight: 700,
+                            color: "var(--blue)",
+                          }}
                         />
-                        <div style={{ fontSize: 11, color: "var(--ink3)", marginTop: 4 }}>Site pe dikhega: <b>{content[s.key]}{s.suffix}</b></div>
+                        <div
+                          style={{
+                            fontSize: 11,
+                            color: "var(--ink3)",
+                            marginTop: 4,
+                          }}
+                        >
+                          Site pe dikhega:{" "}
+                          <b>
+                            {content[s.key]}
+                            {s.suffix}
+                          </b>
+                        </div>
                       </div>
                     ))}
                   </div>
-                  <div style={{ marginTop: 16, padding: 12, background: "var(--surface)", borderRadius: 8, fontSize: 12, color: "var(--ink3)" }}>
-                    💡 Ye numbers hero section ke niche scroll karke stats mein dikhte hain.
+                  <div
+                    style={{
+                      marginTop: 16,
+                      padding: 12,
+                      background: "var(--surface)",
+                      borderRadius: 8,
+                      fontSize: 12,
+                      color: "var(--ink3)",
+                    }}
+                  >
+                    💡 Ye numbers hero section ke niche scroll karke stats mein
+                    dikhte hain.
                   </div>
                 </div>
               </div>
@@ -751,8 +1479,16 @@ export const WebAdminDashboard = () => {
             {section === "slides" && (
               <div className="wad-card">
                 <div className="wad-card-header">
-                  <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.move} size={13} /></div>Image Slider (Home page)</div>
-                  <button className="wad-btn primary sm" onClick={() => setModal({ type: "slide" })}>
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.move} size={13} />
+                    </div>
+                    Image Slider (Home page)
+                  </div>
+                  <button
+                    className="wad-btn primary sm"
+                    onClick={() => setModal({ type: "slide" })}
+                  >
                     <Icon d={ICONS.plus} size={12} /> Slide Jodo
                   </button>
                 </div>
@@ -760,20 +1496,60 @@ export const WebAdminDashboard = () => {
                   <div className="wad-slide-strip">
                     {(content.slides || []).map((slide, idx) => (
                       <div key={idx} className="wad-slide-thumb">
-                        <img src={slide.src} alt={slide.caption} onError={e => e.target.src = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop"} />
-                        <div className="st-caption">{slide.caption || `Slide ${idx + 1}`}</div>
-                        <button className="st-del" onClick={() => deleteSlide(idx)}><Icon d={ICONS.x} size={11} /></button>
-                        <div style={{ position: "absolute", top: 5, left: 5, background: "rgba(0,0,0,.55)", color: "#fff", borderRadius: 5, padding: "2px 6px", fontSize: 10, cursor: "pointer" }}
-                          onClick={() => setModal({ type: "slide", data: slide, index: idx })}>✏️ Edit</div>
+                        <img
+                          src={slide.src}
+                          alt={slide.caption}
+                          onError={(e) =>
+                            (e.target.src =
+                              "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop")
+                          }
+                        />
+                        <div className="st-caption">
+                          {slide.caption || `Slide ${idx + 1}`}
+                        </div>
+                        <button
+                          className="st-del"
+                          onClick={() => deleteSlide(idx)}
+                        >
+                          <Icon d={ICONS.x} size={11} />
+                        </button>
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 5,
+                            left: 5,
+                            background: "rgba(0,0,0,.55)",
+                            color: "#fff",
+                            borderRadius: 5,
+                            padding: "2px 6px",
+                            fontSize: 10,
+                            cursor: "pointer",
+                          }}
+                          onClick={() =>
+                            setModal({ type: "slide", data: slide, index: idx })
+                          }
+                        >
+                          ✏️ Edit
+                        </div>
                       </div>
                     ))}
-                    <div className="wad-slide-add" onClick={() => setModal({ type: "slide" })}>
+                    <div
+                      className="wad-slide-add"
+                      onClick={() => setModal({ type: "slide" })}
+                    >
                       <Icon d={ICONS.plus} size={20} />
                       <span>Naya Slide</span>
                     </div>
                   </div>
-                  <div style={{ marginTop: 12, fontSize: 12, color: "var(--ink3)" }}>
-                    💡 Slides home page pe hero ke niche auto-play hote hain. Edit ya delete karne ke liye slide pe hover karo.
+                  <div
+                    style={{
+                      marginTop: 12,
+                      fontSize: 12,
+                      color: "var(--ink3)",
+                    }}
+                  >
+                    💡 Slides home page pe hero ke niche auto-play hote hain.
+                    Edit ya delete karne ke liye slide pe hover karo.
                   </div>
                 </div>
               </div>
@@ -783,8 +1559,16 @@ export const WebAdminDashboard = () => {
             {section === "gallery" && (
               <div className="wad-card">
                 <div className="wad-card-header">
-                  <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.grid} size={13} /></div>School Gallery Photos</div>
-                  <button className="wad-btn primary sm" onClick={() => setModal({ type: "gallery" })}>
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.grid} size={13} />
+                    </div>
+                    School Gallery Photos
+                  </div>
+                  <button
+                    className="wad-btn primary sm"
+                    onClick={() => setModal({ type: "gallery" })}
+                  >
                     <Icon d={ICONS.plus} size={12} /> Photo Jodo
                   </button>
                 </div>
@@ -792,25 +1576,70 @@ export const WebAdminDashboard = () => {
                   <div className="wad-gal-grid">
                     {(content.gallery || []).map((item, idx) => (
                       <div key={idx} className="wad-gal-item">
-                        <img src={item.src} alt={item.caption} onError={e => e.target.src = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop"} />
+                        <img
+                          src={item.src}
+                          alt={item.caption}
+                          onError={(e) =>
+                            (e.target.src =
+                              "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop")
+                          }
+                        />
                         <div className="wad-gal-overlay">
-                          <button className="wad-btn sm" style={{ background: "#fff", color: "var(--ink)" }} onClick={() => setModal({ type: "gallery", data: item, index: idx })}>
+                          <button
+                            className="wad-btn sm"
+                            style={{ background: "#fff", color: "var(--ink)" }}
+                            onClick={() =>
+                              setModal({
+                                type: "gallery",
+                                data: item,
+                                index: idx,
+                              })
+                            }
+                          >
                             <Icon d={ICONS.edit} size={12} /> Edit
                           </button>
-                          <button className="wad-btn sm danger" onClick={() => deleteGallery(idx)}>
+                          <button
+                            className="wad-btn sm danger"
+                            onClick={() => deleteGallery(idx)}
+                          >
                             <Icon d={ICONS.trash} size={12} /> Delete
                           </button>
                         </div>
-                        {item.caption && <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,.6)", color: "#fff", fontSize: 10, padding: "4px 7px" }}>{item.caption}</div>}
+                        {item.caption && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              bottom: 0,
+                              left: 0,
+                              right: 0,
+                              background: "rgba(0,0,0,.6)",
+                              color: "#fff",
+                              fontSize: 10,
+                              padding: "4px 7px",
+                            }}
+                          >
+                            {item.caption}
+                          </div>
+                        )}
                       </div>
                     ))}
-                    <div className="wad-gal-add" onClick={() => setModal({ type: "gallery" })}>
+                    <div
+                      className="wad-gal-add"
+                      onClick={() => setModal({ type: "gallery" })}
+                    >
                       <Icon d={ICONS.plus} size={22} />
                       <span>Photo Jodo</span>
                     </div>
                   </div>
-                  <div style={{ marginTop: 12, fontSize: 12, color: "var(--ink3)" }}>
-                    💡 Gallery mein pehla photo (index 0) bada dikhta hai. Photo pe hover karo edit/delete karne ke liye.
+                  <div
+                    style={{
+                      marginTop: 12,
+                      fontSize: 12,
+                      color: "var(--ink3)",
+                    }}
+                  >
+                    💡 Gallery mein pehla photo (index 0) bada dikhta hai. Photo
+                    pe hover karo edit/delete karne ke liye.
                   </div>
                 </div>
               </div>
@@ -820,8 +1649,16 @@ export const WebAdminDashboard = () => {
             {section === "notices" && (
               <div className="wad-card">
                 <div className="wad-card-header">
-                  <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.bell} size={13} /></div>Notice Board</div>
-                  <button className="wad-btn primary sm" onClick={() => setModal({ type: "notice" })}>
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.bell} size={13} />
+                    </div>
+                    Notice Board
+                  </div>
+                  <button
+                    className="wad-btn primary sm"
+                    onClick={() => setModal({ type: "notice" })}
+                  >
                     <Icon d={ICONS.plus} size={12} /> Naya Notice
                   </button>
                 </div>
@@ -830,29 +1667,80 @@ export const WebAdminDashboard = () => {
                     {(content.notices || []).map((n, idx) => (
                       <div key={idx} className="wad-list-item">
                         <div className="wad-list-item-header">
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ background: "var(--ink)", color: "#fff", borderRadius: 7, padding: "6px 10px", textAlign: "center", minWidth: 44, flexShrink: 0 }}>
-                              <div style={{ fontWeight: 700, fontSize: 16 }}>{n.day}</div>
-                              <div style={{ fontSize: 9, color: "#f59e0b", textTransform: "uppercase" }}>{n.mon}</div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: 10,
+                            }}
+                          >
+                            <div
+                              style={{
+                                background: "var(--ink)",
+                                color: "#fff",
+                                borderRadius: 7,
+                                padding: "6px 10px",
+                                textAlign: "center",
+                                minWidth: 44,
+                                flexShrink: 0,
+                              }}
+                            >
+                              <div style={{ fontWeight: 700, fontSize: 16 }}>
+                                {n.day}
+                              </div>
+                              <div
+                                style={{
+                                  fontSize: 9,
+                                  color: "#f59e0b",
+                                  textTransform: "uppercase",
+                                }}
+                              >
+                                {n.mon}
+                              </div>
                             </div>
                             <div>
-                              <div className="wad-list-item-title">{n.title}</div>
+                              <div className="wad-list-item-title">
+                                {n.title}
+                              </div>
                               <span className={`ntag ${n.tag}`}>{n.tag}</span>
                             </div>
                           </div>
                           <div className="wad-list-actions">
-                            <button className="wad-btn sm" onClick={() => setModal({ type: "notice", data: n, index: idx })}>
+                            <button
+                              className="wad-btn sm"
+                              onClick={() =>
+                                setModal({
+                                  type: "notice",
+                                  data: n,
+                                  index: idx,
+                                })
+                              }
+                            >
                               <Icon d={ICONS.edit} size={12} /> Edit
                             </button>
-                            <button className="wad-btn sm danger icon-only" onClick={() => deleteNotice(idx)}>
+                            <button
+                              className="wad-btn sm danger icon-only"
+                              onClick={() => deleteNotice(idx)}
+                            >
                               <Icon d={ICONS.trash} size={13} />
                             </button>
                           </div>
                         </div>
-                        <div style={{ fontSize: 12.5, color: "var(--ink3)", lineHeight: 1.6 }}>{n.desc}</div>
+                        <div
+                          style={{
+                            fontSize: 12.5,
+                            color: "var(--ink3)",
+                            lineHeight: 1.6,
+                          }}
+                        >
+                          {n.desc}
+                        </div>
                       </div>
                     ))}
-                    <div className="wad-add-row" onClick={() => setModal({ type: "notice" })}>
+                    <div
+                      className="wad-add-row"
+                      onClick={() => setModal({ type: "notice" })}
+                    >
                       <Icon d={ICONS.plus} size={15} /> Naya Notice Jodo
                     </div>
                   </div>
@@ -865,42 +1753,84 @@ export const WebAdminDashboard = () => {
               <div>
                 <div className="wad-card">
                   <div className="wad-card-header">
-                    <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.users} size={13} /></div>Principal ka Short Quote (Home page)</div>
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.users} size={13} />
+                      </div>
+                      Principal ka Short Quote (Home page)
+                    </div>
                   </div>
                   <div className="wad-card-body">
                     <div className="wad-field">
                       <label className="wad-label">Principal ka Naam</label>
-                      <input className="wad-input" value={content.principalName} onChange={e => set("principalName", e.target.value)} />
+                      <input
+                        className="wad-input"
+                        value={content.principalName}
+                        onChange={(e) => set("principalName", e.target.value)}
+                      />
                     </div>
                     <div className="wad-field">
-                      <label className="wad-label">Short Quote (Home page strip mein dikhta hai)</label>
-                      <textarea className="wad-textarea" rows={3} value={content.principalQuoteShort} onChange={e => set("principalQuoteShort", e.target.value)} />
+                      <label className="wad-label">
+                        Short Quote (Home page strip mein dikhta hai)
+                      </label>
+                      <textarea
+                        className="wad-textarea"
+                        rows={3}
+                        value={content.principalQuoteShort}
+                        onChange={(e) =>
+                          set("principalQuoteShort", e.target.value)
+                        }
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="wad-card">
                   <div className="wad-card-header">
-                    <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.edit} size={13} /></div>Principal ka Full Message (About page)</div>
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.edit} size={13} />
+                      </div>
+                      Principal ka Full Message (About page)
+                    </div>
                   </div>
                   <div className="wad-card-body">
                     <div className="wad-field">
                       <label className="wad-label">Full Message</label>
-                      <textarea className="wad-textarea" rows={6} value={content.principalFull} onChange={e => set("principalFull", e.target.value)} />
+                      <textarea
+                        className="wad-textarea"
+                        rows={6}
+                        value={content.principalFull}
+                        onChange={(e) => set("principalFull", e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
                 <div className="wad-card">
                   <div className="wad-card-header">
-                    <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.users} size={13} /></div>Manager ka Message</div>
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.users} size={13} />
+                      </div>
+                      Manager ka Message
+                    </div>
                   </div>
                   <div className="wad-card-body">
                     <div className="wad-field">
                       <label className="wad-label">Manager ka Naam</label>
-                      <input className="wad-input" value={content.managerName} onChange={e => set("managerName", e.target.value)} />
+                      <input
+                        className="wad-input"
+                        value={content.managerName}
+                        onChange={(e) => set("managerName", e.target.value)}
+                      />
                     </div>
                     <div className="wad-field">
                       <label className="wad-label">Manager ka Message</label>
-                      <textarea className="wad-textarea" rows={4} value={content.managerFull} onChange={e => set("managerFull", e.target.value)} />
+                      <textarea
+                        className="wad-textarea"
+                        rows={4}
+                        value={content.managerFull}
+                        onChange={(e) => set("managerFull", e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -911,26 +1841,70 @@ export const WebAdminDashboard = () => {
             {section === "why" && (
               <div className="wad-card">
                 <div className="wad-card-header">
-                  <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.check} size={13} /></div>Why Choose Us — Cards</div>
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.check} size={13} />
+                    </div>
+                    Why Choose Us — Cards
+                  </div>
                 </div>
                 <div className="wad-card-body">
                   {(content.whyCards || []).map((card, idx) => (
                     <div key={idx} className="wad-why-item">
-                      <div className="wad-why-icon-picker" title="Emoji icon">{card.icon}</div>
+                      <div className="wad-why-icon-picker" title="Emoji icon">
+                        {card.icon}
+                      </div>
                       <div className="wad-why-fields">
                         <div className="wad-grid-2" style={{ marginBottom: 0 }}>
-                          <input className="wad-input" placeholder="Emoji icon (e.g. 🏆)" value={card.icon}
-                            onChange={e => { const a = [...content.whyCards]; a[idx] = { ...a[idx], icon: e.target.value }; set("whyCards", a); }} />
-                          <input className="wad-input" placeholder="Card Title" value={card.title}
-                            onChange={e => { const a = [...content.whyCards]; a[idx] = { ...a[idx], title: e.target.value }; set("whyCards", a); }} />
+                          <input
+                            className="wad-input"
+                            placeholder="Emoji icon (e.g. 🏆)"
+                            value={card.icon}
+                            onChange={(e) => {
+                              const a = [...content.whyCards];
+                              a[idx] = { ...a[idx], icon: e.target.value };
+                              set("whyCards", a);
+                            }}
+                          />
+                          <input
+                            className="wad-input"
+                            placeholder="Card Title"
+                            value={card.title}
+                            onChange={(e) => {
+                              const a = [...content.whyCards];
+                              a[idx] = { ...a[idx], title: e.target.value };
+                              set("whyCards", a);
+                            }}
+                          />
                         </div>
-                        <textarea className="wad-textarea" rows={2} placeholder="Description..." value={card.desc}
-                          onChange={e => { const a = [...content.whyCards]; a[idx] = { ...a[idx], desc: e.target.value }; set("whyCards", a); }} />
+                        <textarea
+                          className="wad-textarea"
+                          rows={2}
+                          placeholder="Description..."
+                          value={card.desc}
+                          onChange={(e) => {
+                            const a = [...content.whyCards];
+                            a[idx] = { ...a[idx], desc: e.target.value };
+                            set("whyCards", a);
+                          }}
+                        />
                       </div>
                     </div>
                   ))}
                   <div style={{ marginTop: 8 }}>
-                    <button className="wad-add-row" onClick={() => set("whyCards", [...(content.whyCards || []), { icon: "⭐", title: "Naya Feature", desc: "Iska vivaran yahan likhein." }])}>
+                    <button
+                      className="wad-add-row"
+                      onClick={() =>
+                        set("whyCards", [
+                          ...(content.whyCards || []),
+                          {
+                            icon: "⭐",
+                            title: "Naya Feature",
+                            desc: "Iska vivaran yahan likhein.",
+                          },
+                        ])
+                      }
+                    >
                       <Icon d={ICONS.plus} size={15} /> Naya Card Jodo
                     </button>
                   </div>
@@ -943,36 +1917,66 @@ export const WebAdminDashboard = () => {
               <div>
                 <div className="wad-card">
                   <div className="wad-card-header">
-                    <div className="wad-card-title"><div className="ct-icon"><Icon d={ICONS.phone} size={13} /></div>Contact Details (Footer + Contact page)</div>
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.phone} size={13} />
+                      </div>
+                      Contact Details (Footer + Contact page)
+                    </div>
                   </div>
                   <div className="wad-card-body">
                     <div className="wad-field">
                       <label className="wad-label">Poora Pata (Address)</label>
-                      <textarea className="wad-textarea" rows={2} value={content.contactAddress} onChange={e => set("contactAddress", e.target.value)} />
+                      <textarea
+                        className="wad-textarea"
+                        rows={2}
+                        value={content.contactAddress}
+                        onChange={(e) => set("contactAddress", e.target.value)}
+                      />
                     </div>
                     <div className="wad-grid-2">
                       <div className="wad-field">
                         <label className="wad-label">Main Phone Number</label>
-                        <input className="wad-input" value={content.contactPhone} onChange={e => set("contactPhone", e.target.value)} />
+                        <input
+                          className="wad-input"
+                          value={content.contactPhone}
+                          onChange={(e) => set("contactPhone", e.target.value)}
+                        />
                       </div>
                       <div className="wad-field">
-                        <label className="wad-label">Admission Enquiry Number</label>
-                        <input className="wad-input" value={content.contactPhoneAdmission} onChange={e => set("contactPhoneAdmission", e.target.value)} />
+                        <label className="wad-label">
+                          Admission Enquiry Number
+                        </label>
+                        <input
+                          className="wad-input"
+                          value={content.contactPhoneAdmission}
+                          onChange={(e) =>
+                            set("contactPhoneAdmission", e.target.value)
+                          }
+                        />
                       </div>
                       <div className="wad-field">
                         <label className="wad-label">Email Address</label>
-                        <input className="wad-input" type="email" value={content.contactEmail} onChange={e => set("contactEmail", e.target.value)} />
+                        <input
+                          className="wad-input"
+                          type="email"
+                          value={content.contactEmail}
+                          onChange={(e) => set("contactEmail", e.target.value)}
+                        />
                       </div>
                       <div className="wad-field">
                         <label className="wad-label">Office Hours</label>
-                        <input className="wad-input" value={content.contactHours} onChange={e => set("contactHours", e.target.value)} />
+                        <input
+                          className="wad-input"
+                          value={content.contactHours}
+                          onChange={(e) => set("contactHours", e.target.value)}
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
             )}
-
           </div>
         </div>
       </div>
@@ -981,21 +1985,33 @@ export const WebAdminDashboard = () => {
       {modal?.type === "slide" && (
         <SlideModal
           slide={modal.data}
-          onSave={slide => modal.index !== undefined ? updateSlide(modal.index, slide) : addSlide(slide)}
+          onSave={(slide) =>
+            modal.index !== undefined
+              ? updateSlide(modal.index, slide)
+              : addSlide(slide)
+          }
           onClose={() => setModal(null)}
         />
       )}
       {modal?.type === "gallery" && (
         <GalleryModal
           item={modal.data}
-          onSave={item => modal.index !== undefined ? updateGallery(modal.index, item) : addGallery(item)}
+          onSave={(item) =>
+            modal.index !== undefined
+              ? updateGallery(modal.index, item)
+              : addGallery(item)
+          }
           onClose={() => setModal(null)}
         />
       )}
       {modal?.type === "notice" && (
         <NoticeModal
           notice={modal.data}
-          onSave={n => modal.index !== undefined ? updateNotice(modal.index, n) : addNotice(n)}
+          onSave={(n) =>
+            modal.index !== undefined
+              ? updateNotice(modal.index, n)
+              : addNotice(n)
+          }
           onClose={() => setModal(null)}
         />
       )}
