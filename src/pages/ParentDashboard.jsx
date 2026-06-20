@@ -17,17 +17,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Search,
+  Trophy,
+  Target,
+  BarChart3,
+  Sparkles,
 } from "lucide-react";
 import { db, collection, getDocs, query, where, isMockMode } from "../firebase";
-
-// ---------------------------------------------------------------------------
-// NOTE ON NAMING: This component is rendered for the "Parent" login role, but
-// the parent only ever views their own child's (the student's) records — they
-// cannot edit another family's data. That's why state/labels below say
-// "studentInfo" / "Student Profile" etc. even though the component itself is
-// called ParentDashboard. Keeping this comment here so future contributors
-// aren't confused by the naming.
-// ---------------------------------------------------------------------------
 
 const SUBJECTS = [
   "Mathematics",
@@ -41,17 +36,32 @@ const SUBJECTS = [
 
 const EXAMS = ["Mid-Term", "Final", "Unit Test", "Assignment"];
 
-// Default fee structure used only when a student record has no fees/breakdown
-// saved yet. Defined once here instead of being repeated inline in four
-// different places, so updating a default amount only needs one edit.
+const SUBJECT_ICONS = {
+  Mathematics: "📐",
+  Science: "🔬",
+  English: "📚",
+  Hindi: "✒️",
+  "Social Studies": "🌍",
+  Computer: "💻",
+  "Physical Education": "🏃",
+};
+
+const DAYS_OF_WEEK = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
 const DEFAULT_FEE_BREAKDOWN = {
   monthlyTuition: 3000,
   yearlyTerm: 10000,
   extraCharges: 4000,
 };
 
-// Single source of truth for the school's payment details so the "Copy UPI ID"
-// button and the QR code section can never show two different IDs again.
 const SCHOOL_PAYMENT_DETAILS = {
   upiId: "admin@school",
   bankName: "State Bank of India (SBI)",
@@ -60,11 +70,61 @@ const SCHOOL_PAYMENT_DETAILS = {
   ifscCode: "SBIN0001234",
 };
 
+const getGrade = (percentage) => {
+  if (percentage >= 90)
+    return {
+      grade: "A+",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+    };
+  if (percentage >= 80)
+    return {
+      grade: "A",
+      color: "text-emerald-600",
+      bg: "bg-emerald-50",
+      border: "border-emerald-200",
+    };
+  if (percentage >= 70)
+    return {
+      grade: "B+",
+      color: "text-indigo-600",
+      bg: "bg-indigo-50",
+      border: "border-indigo-200",
+    };
+  if (percentage >= 60)
+    return {
+      grade: "B",
+      color: "text-indigo-600",
+      bg: "bg-indigo-50",
+      border: "border-indigo-200",
+    };
+  if (percentage >= 50)
+    return {
+      grade: "C",
+      color: "text-amber-600",
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+    };
+  if (percentage >= 40)
+    return {
+      grade: "D",
+      color: "text-orange-600",
+      bg: "bg-orange-50",
+      border: "border-orange-200",
+    };
+  return {
+    grade: "F",
+    color: "text-rose-600",
+    bg: "bg-rose-50",
+    border: "border-rose-200",
+  };
+};
+
 export const ParentDashboard = () => {
   const { userData, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("profile");
 
-  // Data States
   const [studentInfo, setStudentInfo] = useState(null);
   const [notices, setNotices] = useState([]);
   const [homework, setHomework] = useState([]);
@@ -72,6 +132,14 @@ export const ParentDashboard = () => {
   const [timetable, setTimetable] = useState([]);
   const [timetableStartHour, setTimetableStartHour] = useState(8);
   const [timetablePeriodDuration, setTimetablePeriodDuration] = useState(60);
+
+  const [activeExamTab, setActiveExamTab] = useState(EXAMS[0]);
+
+  const [activeTimetableDay, setActiveTimetableDay] = useState(() => {
+    const todayIdx = new Date().getDay();
+    const todayName = DAYS_OF_WEEK[todayIdx];
+    return todayName === "Sunday" ? "Monday" : todayName;
+  });
 
   const getPeriodTime = (periodStr, startHour, durationMinutes) => {
     const periodSlots = {
@@ -104,16 +172,55 @@ export const ParentDashboard = () => {
     return `${formatTime(startTotalMinutes)} - ${formatTime(endTotalMinutes)}`;
   };
 
+  const isPeriodOngoing = (timeRangeStr) => {
+    if (!timeRangeStr) return false;
+    try {
+      const now = new Date();
+      const [startStr, endStr] = timeRangeStr.split(" - ");
+      const parseTimeToMinutes = (t) => {
+        const [time, ampm] = t.trim().split(" ");
+        let [h, m] = time.split(":").map(Number);
+        if (ampm === "PM" && h !== 12) h += 12;
+        if (ampm === "AM" && h === 12) h = 0;
+        return h * 60 + m;
+      };
+      const startMin = parseTimeToMinutes(startStr);
+      const endMin = parseTimeToMinutes(endStr);
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      return nowMin >= startMin && nowMin < endMin;
+    } catch {
+      return false;
+    }
+  };
+
+  const isPeriodUpcoming = (timeRangeStr) => {
+    if (!timeRangeStr) return false;
+    try {
+      const now = new Date();
+      const [startStr] = timeRangeStr.split(" - ");
+      const parseTimeToMinutes = (t) => {
+        const [time, ampm] = t.trim().split(" ");
+        let [h, m] = time.split(":").map(Number);
+        if (ampm === "PM" && h !== 12) h += 12;
+        if (ampm === "AM" && h === 12) h = 0;
+        return h * 60 + m;
+      };
+      const startMin = parseTimeToMinutes(startStr);
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      return startMin > nowMin;
+    } catch {
+      return false;
+    }
+  };
+
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState({ message: "", type: "" });
 
-  // Modal for payment simulation & gateway parameters
   const [showPayModal, setShowPayModal] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [upiProvider, setUpiProvider] = useState("gpay");
   const [paymentSuccess, setPaymentSuccess] = useState(false);
 
-  // Payment Verification Requests State
   const [paymentForm, setPaymentForm] = useState({
     amountPaid: "",
     paymentDate: new Date().toISOString().split("T")[0],
@@ -124,7 +231,6 @@ export const ParentDashboard = () => {
   const [showFeesBreakdownModal, setShowFeesBreakdownModal] = useState(false);
   const [showPaidHistoryModal, setShowPaidHistoryModal] = useState(false);
 
-  // Admit Card Modal
   const [showAdmitCardModal, setShowAdmitCardModal] = useState(false);
 
   const [attendanceHistory, setAttendanceHistory] = useState([
@@ -136,7 +242,7 @@ export const ParentDashboard = () => {
   ]);
 
   const [calendarYear, setCalendarYear] = useState(2026);
-  const [calendarMonth, setCalendarMonth] = useState(5); // June
+  const [calendarMonth, setCalendarMonth] = useState(5);
   const [attendanceSearch, setAttendanceSearch] = useState("");
   const [attendanceFilter, setAttendanceFilter] = useState("All");
 
@@ -263,7 +369,6 @@ export const ParentDashboard = () => {
           }
         }
       } else {
-        // Live Firebase Mode: Query Firestore for student data
         const q = query(
           collection(db, "students"),
           where("id", "==", studentId),
@@ -280,7 +385,6 @@ export const ParentDashboard = () => {
             setAttendanceHistory(sortedHistory);
           }
         } else {
-          // Fallback to local storage if student not found in Firestore
           const mockDb = localStorage.getItem("school_erp_mock_db");
           if (mockDb) {
             const parsed = JSON.parse(mockDb);
@@ -299,7 +403,6 @@ export const ParentDashboard = () => {
           }
         }
 
-        // Also load supplementary data (timetables, resources, homework) from local mock DB if not yet set up in Firestore
         const mockDb = localStorage.getItem("school_erp_mock_db");
         if (mockDb) {
           const parsed = JSON.parse(mockDb);
@@ -607,7 +710,6 @@ export const ParentDashboard = () => {
       );
     }
 
-    // Always update local storage too
     try {
       const mockDb = localStorage.getItem("school_erp_mock_db");
       if (mockDb) {
@@ -642,7 +744,6 @@ export const ParentDashboard = () => {
   const handleSimulatePayment = () => {
     setPayLoading(true);
     setTimeout(() => {
-      // update db
       const mockDb = localStorage.getItem("school_erp_mock_db");
       if (mockDb) {
         const parsed = JSON.parse(mockDb);
@@ -669,9 +770,92 @@ export const ParentDashboard = () => {
     }, 2000);
   };
 
+  // ─── RESULTS DASHBOARD DERIVED DATA ─────────────────────────────────────
+  const allMarks = studentInfo?.marks ?? [];
+
+  const overallStats = (() => {
+    if (allMarks.length === 0) {
+      return { obtained: 0, max: 0, percentage: 0 };
+    }
+    const obtained = allMarks.reduce(
+      (s, m) => s + Number(m.marksObtained || 0),
+      0,
+    );
+    const max = allMarks.reduce((s, m) => s + Number(m.maxMarks || 0), 0);
+    const percentage = max > 0 ? Math.round((obtained / max) * 100) : 0;
+    return { obtained, max, percentage };
+  })();
+
+  const overallGradeInfo = getGrade(overallStats.percentage);
+
+  const subjectAverages = SUBJECTS.map((subject) => {
+    const subjectMarks = allMarks.filter((m) => m.subject === subject);
+    if (subjectMarks.length === 0) return { subject, percentage: null };
+    const obtained = subjectMarks.reduce(
+      (s, m) => s + Number(m.marksObtained || 0),
+      0,
+    );
+    const max = subjectMarks.reduce((s, m) => s + Number(m.maxMarks || 0), 0);
+    return {
+      subject,
+      percentage: max > 0 ? Math.round((obtained / max) * 100) : null,
+    };
+  });
+
+  const gradedSubjectAverages = subjectAverages.filter(
+    (s) => s.percentage !== null,
+  );
+  const highestSubject =
+    gradedSubjectAverages.length > 0
+      ? gradedSubjectAverages.reduce((a, b) =>
+          a.percentage >= b.percentage ? a : b,
+        )
+      : null;
+  const weakestSubject =
+    gradedSubjectAverages.length > 0
+      ? gradedSubjectAverages.reduce((a, b) =>
+          a.percentage <= b.percentage ? a : b,
+        )
+      : null;
+
+  const examMarksForTab = allMarks.filter((m) => m.exam === activeExamTab);
+
+  // ─── TIMETABLE DASHBOARD DERIVED DATA ───────────────────────────────────
+  const dayTimetable = timetable
+    .filter((t) => t.day === activeTimetableDay)
+    .map((t) => ({
+      ...t,
+      time:
+        t.time ||
+        getPeriodTime(t.period, timetableStartHour, timetablePeriodDuration),
+    }))
+    .sort((a, b) => {
+      const periodOrder = {
+        "1st": 1,
+        "2nd": 2,
+        "3rd": 3,
+        "4th": 4,
+        "5th": 5,
+        "6th": 6,
+        "7th": 7,
+      };
+      return (periodOrder[a.period] || 0) - (periodOrder[b.period] || 0);
+    });
+
+  const todayName = (() => {
+    const idx = new Date().getDay();
+    const n = DAYS_OF_WEEK[idx];
+    return n === "Sunday" ? "Monday" : n;
+  })();
+
+  const isViewingToday = activeTimetableDay === todayName;
+
+  const nextClassIndex = isViewingToday
+    ? dayTimetable.findIndex((slot) => isPeriodUpcoming(slot.time))
+    : -1;
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row font-sans text-slate-800">
-      {/* SIDEBAR: Slate 900 */}
       <aside className="w-full md:w-64 bg-slate-900 text-slate-400 flex flex-col justify-between shrink-0 border-r border-slate-800">
         <div>
           <div className="p-6 border-b border-slate-800 flex items-center gap-3 bg-slate-950/40">
@@ -742,9 +926,7 @@ export const ParentDashboard = () => {
         </div>
       </aside>
 
-      {/* CONTENT WORKSPACE */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
         <header className="bg-white border-b border-slate-200 h-20 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2">
             <Calendar className="w-5 h-5 text-amber-600" />
@@ -770,8 +952,7 @@ export const ParentDashboard = () => {
             </span>
           </div>
         ) : (
-          <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto w-full">
-            {/* Notification Banner */}
+          <main className="flex-1 p-4 sm:p-8 overflow-y-auto max-w-7xl mx-auto w-full">
             {notification.message && (
               <div
                 className={`mb-6 p-4 rounded-xl border text-xs font-bold flex items-center gap-2 animate-fade-in ${
@@ -785,7 +966,6 @@ export const ParentDashboard = () => {
               </div>
             )}
 
-            {/* TAB 1: DASHBOARD */}
             {activeTab === "dashboard" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
@@ -858,12 +1038,9 @@ export const ParentDashboard = () => {
               </div>
             )}
 
-            {/* TAB 2: MY ATTENDANCE */}
             {activeTab === "attendance" && (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Stats & Calendar Grid */}
                 <div className="space-y-6 lg:col-span-1">
-                  {/* Ring Stats Panel */}
                   <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col items-center justify-center text-center">
                     <h3 className="text-xs font-bold text-slate-500 mb-6 uppercase tracking-wider">
                       Attendance Percentage
@@ -917,7 +1094,6 @@ export const ParentDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Interactive Calendar Panel */}
                   <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
                     <div className="flex justify-between items-center">
                       <h3 className="text-xs font-black text-slate-700 uppercase tracking-wider">
@@ -1013,7 +1189,6 @@ export const ParentDashboard = () => {
                   </div>
                 </div>
 
-                {/* Right Column */}
                 <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm flex flex-col h-full space-y-6">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4 flex-wrap gap-4">
                     <div>
@@ -1105,8 +1280,6 @@ export const ParentDashboard = () => {
               </div>
             )}
 
-            {/* TAB 3: FEES STATUS & PAYMENT */}
-            {/* TAB 3: FEES STATUS & PAYMENT */}
             {activeTab === "fees" && (
               <div className="space-y-8 animate-fade-in">
                 <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -1408,7 +1581,6 @@ export const ParentDashboard = () => {
                   </div>
                 </div>
 
-                {/* MODAL SIMULATION */}
                 {showPayModal && (
                   <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
                     <div className="bg-white border border-slate-200 p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl relative">
@@ -1676,128 +1848,275 @@ export const ParentDashboard = () => {
               </div>
             )}
 
-            {/* TAB 4: RESULTS / MARKSHEET */}
-            {/* TAB 4: RESULTS / MARKSHEET */}
+            {/* TAB 4: RESULTS / MARKSHEET — Modern Student Performance Dashboard */}
             {activeTab === "results" && (
-              <div className="space-y-6">
-                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <h3 className="text-base font-extrabold text-slate-800">
-                      Academic Marksheet & Report Cards
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <div>
+                    <h3 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-orange-500" />
+                      Academic Performance Dashboard
                     </h3>
-                    <div className="flex gap-2 w-full sm:w-auto">
+                    <p className="text-xs text-slate-400 mt-1">
+                      A quick, friendly snapshot of how you're doing this year.
+                    </p>
+                  </div>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setShowAdmitCardModal(true)}
+                      className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-xl transition-all"
+                    >
+                      Generate Admit Card
+                    </button>
+                    <button
+                      onClick={handleExportMarks}
+                      className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
+                    >
+                      <Download className="w-4 h-4" /> Export Report
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="bg-gradient-to-br from-indigo-600 to-indigo-700 rounded-3xl p-5 shadow-lg shadow-indigo-600/20 text-white relative overflow-hidden">
+                    <div className="absolute -right-4 -top-4 w-20 h-20 bg-white/10 rounded-full"></div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-100 block">
+                      Overall %
+                    </span>
+                    <span className="text-3xl font-black block mt-2">
+                      {overallStats.percentage}%
+                    </span>
+                    <span className="text-[10px] text-indigo-100 font-semibold block mt-1">
+                      {overallStats.obtained}/{overallStats.max} marks
+                    </span>
+                  </div>
+
+                  <div
+                    className={`bg-white border-2 ${overallGradeInfo.border} rounded-3xl p-5 shadow-sm relative overflow-hidden`}
+                  >
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Overall Grade
+                    </span>
+                    <span
+                      className={`text-3xl font-black block mt-2 ${overallGradeInfo.color}`}
+                    >
+                      {overallGradeInfo.grade}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold block mt-1">
+                      Keep it up!
+                    </span>
+                  </div>
+
+                  <div className="bg-white border-2 border-orange-200 rounded-3xl p-5 shadow-sm relative overflow-hidden">
+                    <Trophy className="w-4 h-4 text-orange-500 absolute right-4 top-5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Class Rank
+                    </span>
+                    <span className="text-3xl font-black block mt-2 text-orange-500">
+                      #{studentInfo?.classRank || 3}
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold block mt-1">
+                      First Division
+                    </span>
+                  </div>
+
+                  <div className="bg-white border-2 border-emerald-200 rounded-3xl p-5 shadow-sm relative overflow-hidden">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                      Attendance
+                    </span>
+                    <span className="text-3xl font-black block mt-2 text-emerald-600">
+                      {attendanceRate}%
+                    </span>
+                    <span className="text-[10px] text-slate-400 font-semibold block mt-1">
+                      {totalPresents} present days
+                    </span>
+                  </div>
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm">
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
+                    {EXAMS.map((exam) => (
                       <button
-                        onClick={() => setShowAdmitCardModal(true)}
-                        className="px-3.5 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-xl transition-all"
+                        key={exam}
+                        onClick={() => setActiveExamTab(exam)}
+                        className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                          activeExamTab === exam
+                            ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                            : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200"
+                        }`}
                       >
-                        Generate Admit Card
+                        {exam}
                       </button>
-                      <button
-                        onClick={handleExportMarks}
-                        className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all flex items-center gap-1.5"
-                      >
-                        <Download className="w-4 h-4" /> Export Report (CSV)
-                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="text-sm font-extrabold text-slate-700">
+                      {activeExamTab} Term Report
+                    </h4>
+                    {examMarksForTab.length > 0 ? (
+                      <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+                        Released
+                      </span>
+                    ) : (
+                      <span className="bg-slate-100 text-slate-400 border border-slate-200 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider">
+                        Awaiting
+                      </span>
+                    )}
+                  </div>
+
+                  {examMarksForTab.length === 0 ? (
+                    <div className="bg-white border border-dashed border-slate-200 rounded-3xl py-14 text-center">
+                      <BookOpen className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                      <p className="text-sm font-bold text-slate-500">
+                        No results released yet for {activeExamTab}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Check back once your teacher uploads the marks.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {SUBJECTS.map((subject) => {
+                        const mark = examMarksForTab.find(
+                          (m) => m.subject === subject,
+                        );
+                        if (!mark) return null;
+                        const pct = Math.round(
+                          (Number(mark.marksObtained) / Number(mark.maxMarks)) *
+                            100,
+                        );
+                        const gradeInfo = getGrade(pct);
+                        return (
+                          <div
+                            key={subject}
+                            className="bg-white border border-slate-200 rounded-3xl p-5 shadow-sm hover:shadow-md transition-all"
+                          >
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl">
+                                  {SUBJECT_ICONS[subject] || "📘"}
+                                </span>
+                                <span className="font-extrabold text-slate-800 text-sm">
+                                  {subject}
+                                </span>
+                              </div>
+                              <span
+                                className={`px-2.5 py-1 rounded-full text-[10px] font-black ${gradeInfo.bg} ${gradeInfo.color} border ${gradeInfo.border}`}
+                              >
+                                {gradeInfo.grade}
+                              </span>
+                            </div>
+                            <div className="flex items-end justify-between mb-2">
+                              <span className="text-2xl font-black text-slate-800">
+                                {mark.marksObtained}
+                                <span className="text-sm text-slate-400 font-bold">
+                                  {" "}
+                                  / {mark.maxMarks}
+                                </span>
+                              </span>
+                              <span className="text-lg font-extrabold text-indigo-600">
+                                {pct}%
+                              </span>
+                            </div>
+                            <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-700 ${
+                                  pct >= 75
+                                    ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
+                                    : pct >= 50
+                                      ? "bg-gradient-to-r from-indigo-400 to-indigo-500"
+                                      : "bg-gradient-to-r from-orange-400 to-rose-500"
+                                }`}
+                                style={{ width: `${pct}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {SUBJECTS.every(
+                        (s) => !examMarksForTab.find((m) => m.subject === s),
+                      ) && (
+                        <div className="col-span-full text-center py-8 text-slate-400 text-xs">
+                          No subject marks found for this exam.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
+                    <h4 className="text-sm font-extrabold text-slate-800 mb-5 flex items-center gap-2">
+                      <BarChart3 className="w-4 h-4 text-indigo-600" />{" "}
+                      Subject-Wise Comparison
+                    </h4>
+                    <div className="space-y-4">
+                      {gradedSubjectAverages.length === 0 ? (
+                        <p className="text-center py-8 text-slate-400 text-xs">
+                          No graded subjects yet to compare.
+                        </p>
+                      ) : (
+                        gradedSubjectAverages.map((s) => (
+                          <div
+                            key={s.subject}
+                            className="flex items-center gap-3"
+                          >
+                            <span className="text-xs font-bold text-slate-600 w-28 shrink-0 truncate">
+                              {SUBJECT_ICONS[s.subject]} {s.subject}
+                            </span>
+                            <div className="flex-1 h-3 bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full ${
+                                  s.percentage >= 75
+                                    ? "bg-emerald-500"
+                                    : s.percentage >= 50
+                                      ? "bg-indigo-500"
+                                      : "bg-orange-500"
+                                }`}
+                                style={{ width: `${s.percentage}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-xs font-black text-slate-700 w-10 text-right">
+                              {s.percentage}%
+                            </span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
-                  <div className="space-y-6">
-                    {EXAMS.map((examType) => {
-                      const examMarks = (studentInfo?.marks ?? []).filter(
-                        (m) => m.exam === examType,
-                      );
-                      return (
-                        <div
-                          key={examType}
-                          className="border border-slate-100 rounded-2xl p-4 bg-slate-50/40 space-y-3"
-                        >
-                          <h4 className="font-extrabold text-xs text-indigo-600 uppercase tracking-wider flex justify-between items-center">
-                            <span>{examType} Term Report</span>
-                            {examMarks.length > 0 ? (
-                              <span className="bg-emerald-50 text-emerald-600 border border-emerald-100 px-2.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                                Released
-                              </span>
-                            ) : (
-                              <span className="bg-slate-100 text-slate-400 border border-slate-200 px-2.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                                Not Uploaded / Awaiting
-                              </span>
-                            )}
-                          </h4>
-                          <div className="overflow-x-auto border border-slate-100 rounded-xl bg-white">
-                            <table className="w-full text-left text-[11px] border-collapse">
-                              <thead>
-                                <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-bold uppercase tracking-wider">
-                                  <th className="p-2.5">Subject</th>
-                                  <th className="p-2.5 text-center">
-                                    Marks Obtained
-                                  </th>
-                                  <th className="p-2.5 text-center">
-                                    Percentage
-                                  </th>
-                                  <th className="p-2.5 text-center">Status</th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-50 text-slate-700">
-                                {SUBJECTS.map((subject) => {
-                                  const mark = examMarks.find(
-                                    (m) => m.subject === subject,
-                                  );
-                                  if (mark) {
-                                    return (
-                                      <tr
-                                        key={subject}
-                                        className="hover:bg-slate-50/50 transition-colors"
-                                      >
-                                        <td className="p-2.5 font-bold text-slate-800">
-                                          {subject}
-                                        </td>
-                                        <td className="p-2.5 text-center font-mono font-bold">
-                                          {mark.marksObtained} / {mark.maxMarks}
-                                        </td>
-                                        <td className="p-2.5 text-center font-black text-slate-800">
-                                          {Math.round(
-                                            (mark.marksObtained /
-                                              mark.maxMarks) *
-                                              100,
-                                          )}
-                                          %
-                                        </td>
-                                        <td className="p-2.5 text-center">
-                                          <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 rounded-full text-[9px] font-bold">
-                                            Released
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    );
-                                  } else {
-                                    return (
-                                      <tr
-                                        key={subject}
-                                        className="hover:bg-slate-50/50 transition-colors bg-slate-50/10"
-                                      >
-                                        <td className="p-2.5 font-bold text-slate-400">
-                                          {subject}
-                                        </td>
-                                        <td className="p-2.5 text-center text-slate-300 font-mono">
-                                          -
-                                        </td>
-                                        <td className="p-2.5 text-center text-slate-300 font-bold">
-                                          -
-                                        </td>
-                                        <td className="p-2.5 text-center">
-                                          <span className="px-2 py-0.5 bg-slate-100 text-slate-400 rounded-full text-[9px] font-bold">
-                                            Not Released
-                                          </span>
-                                        </td>
-                                      </tr>
-                                    );
-                                  }
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      );
-                    })}
+
+                  <div className="space-y-4">
+                    <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-5 shadow-lg shadow-emerald-600/20 text-white">
+                      <Trophy className="w-5 h-5 mb-2 text-emerald-100" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-100 block">
+                        Highest Scoring Subject
+                      </span>
+                      <span className="text-lg font-black block mt-1">
+                        {highestSubject ? highestSubject.subject : "—"}
+                      </span>
+                      <span className="text-xs font-semibold text-emerald-100 block mt-0.5">
+                        {highestSubject
+                          ? `${highestSubject.percentage}%`
+                          : "No data yet"}
+                      </span>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-500 to-rose-500 rounded-3xl p-5 shadow-lg shadow-orange-500/20 text-white">
+                      <Target className="w-5 h-5 mb-2 text-orange-100" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-orange-100 block">
+                        Needs Improvement
+                      </span>
+                      <span className="text-lg font-black block mt-1">
+                        {weakestSubject ? weakestSubject.subject : "—"}
+                      </span>
+                      <span className="text-xs font-semibold text-orange-100 block mt-0.5">
+                        {weakestSubject
+                          ? `${weakestSubject.percentage}%`
+                          : "No data yet"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1920,130 +2239,150 @@ export const ParentDashboard = () => {
               </div>
             )}
 
-            {/* TAB 5: TIMETABLE */}
+            {/* TAB 5: TIMETABLE — Modern Day-Tab Timeline UI */}
             {activeTab === "timetable" && (
-              <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden">
-                <h3 className="text-base font-extrabold text-slate-800 mb-6">
-                  Weekly Class Timetable
-                </h3>
-                {timetable.length === 0 ? (
-                  <p className="text-center py-8 text-slate-400 text-xs">
-                    No timetable available for your class yet.
-                  </p>
-                ) : (
-                  <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
-                          <th className="py-4 px-4 font-extrabold text-slate-800 border-r border-slate-200">
-                            Day
-                          </th>
-                          {[
-                            "1st",
-                            "2nd",
-                            "3rd",
-                            "4th",
-                            "5th",
-                            "6th",
-                            "7th",
-                          ].map((p) => {
-                            const timeStr = getPeriodTime(
-                              p,
-                              timetableStartHour,
-                              timetablePeriodDuration,
-                            );
-                            return (
-                              <th
-                                key={p}
-                                className="py-4 px-3 text-center border-r border-slate-200 last:border-r-0 min-w-[140px]"
-                              >
-                                <span className="block text-indigo-600 font-black">
-                                  {p}
-                                </span>
-                                <span className="block text-[9px] text-slate-400 font-normal mt-0.5 normal-case font-mono">
-                                  {timeStr}
-                                </span>
-                              </th>
-                            );
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100 bg-white">
-                        {[
-                          "Monday",
-                          "Tuesday",
-                          "Wednesday",
-                          "Thursday",
-                          "Friday",
-                          "Saturday",
-                        ].map((day) => (
-                          <tr
-                            key={day}
-                            className="hover:bg-slate-50/60 transition-colors"
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                  <div>
+                    <h3 className="text-lg font-extrabold text-slate-800">
+                      Class Timetable
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-1">
+                      {studentInfo?.class || "Class 1"} -{" "}
+                      {studentInfo?.section || "A"} Weekly Schedule
+                    </p>
+                  </div>
+                  {isViewingToday && (
+                    <span className="px-3.5 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-[11px] font-bold rounded-full shadow-md shadow-orange-500/20 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" /> Today's Classes
+                    </span>
+                  )}
+                </div>
+
+                <div className="bg-white border border-slate-200 rounded-3xl p-4 shadow-sm">
+                  <div className="flex gap-2 overflow-x-auto pb-1 -mb-1">
+                    {[
+                      "Monday",
+                      "Tuesday",
+                      "Wednesday",
+                      "Thursday",
+                      "Friday",
+                      "Saturday",
+                    ].map((d) => (
+                      <button
+                        key={d}
+                        onClick={() => setActiveTimetableDay(d)}
+                        className={`px-4 py-2.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+                          activeTimetableDay === d
+                            ? "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/20"
+                            : "bg-slate-50 text-slate-500 hover:bg-slate-100 border border-slate-200"
+                        }`}
+                      >
+                        {d}
+                        {d === todayName && (
+                          <span
+                            className={`ml-1.5 text-[8px] font-black uppercase ${
+                              activeTimetableDay === d
+                                ? "text-indigo-100"
+                                : "text-orange-500"
+                            }`}
                           >
-                            <td className="py-4 px-4 text-xs font-black text-slate-700 bg-slate-50/40 border-r border-slate-200">
-                              {day}
-                            </td>
-                            {[
-                              "1st",
-                              "2nd",
-                              "3rd",
-                              "4th",
-                              "5th",
-                              "6th",
-                              "7th",
-                            ].map((p) => {
-                              const slotData = timetable.find(
-                                (t) => t.day === day && t.period === p,
-                              );
-                              return (
-                                <td
-                                  key={p}
-                                  className="p-2 border-r border-slate-100 last:border-r-0 text-center vertical-align-middle"
-                                >
-                                  {slotData ? (
-                                    <div className="p-2.5 rounded-xl bg-indigo-50 border border-indigo-100 text-left hover:scale-[1.02] hover:bg-indigo-50/90 transition-all">
-                                      <span
-                                        className="font-extrabold text-indigo-700 text-[11px] block truncate"
-                                        title={slotData.subject}
-                                      >
-                                        {slotData.subject}
-                                      </span>
-                                      <span
-                                        className="text-[10px] text-slate-500 block mt-1 truncate"
-                                        title={slotData.teacherName}
-                                      >
-                                        👤 {slotData.teacherName}
-                                      </span>
-                                      <span className="text-[9px] text-indigo-500 font-mono block mt-0.5">
-                                        ⏱{" "}
-                                        {
-                                          getPeriodTime(
-                                            p,
-                                            timetableStartHour,
-                                            timetablePeriodDuration,
-                                          ).split(" - ")[0]
-                                        }
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <span className="text-[11px] text-slate-300 italic">
-                                      -
+                            •Today
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {dayTimetable.length === 0 ? (
+                  <div className="bg-white border border-dashed border-slate-200 rounded-3xl py-16 text-center">
+                    <div className="mx-auto w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <p className="mt-4 text-sm font-bold text-slate-700">
+                      No classes scheduled
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      There's no timetable entry for {activeTimetableDay} yet.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="relative pl-8">
+                    <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-slate-200"></div>
+
+                    <div className="space-y-4">
+                      {dayTimetable.map((slot, idx) => {
+                        const ongoing =
+                          isViewingToday && isPeriodOngoing(slot.time);
+                        const isNext = isViewingToday && idx === nextClassIndex;
+                        return (
+                          <div
+                            key={slot.day + slot.period + idx}
+                            className="relative"
+                          >
+                            <div
+                              className={`absolute -left-8 top-5 w-4 h-4 rounded-full border-2 ${
+                                ongoing
+                                  ? "bg-orange-500 border-orange-500 ring-4 ring-orange-100 animate-pulse"
+                                  : "bg-white border-indigo-400"
+                              }`}
+                            ></div>
+
+                            <div
+                              className={`rounded-2xl border p-4 shadow-sm transition-all ${
+                                ongoing
+                                  ? "bg-orange-50 border-orange-300 shadow-md shadow-orange-200/40"
+                                  : "bg-white border-slate-200 hover:shadow-md"
+                              }`}
+                            >
+                              <div className="flex justify-between items-start gap-3">
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-base font-extrabold text-indigo-700 truncate">
+                                      📘 {slot.subject || "—"}
                                     </span>
-                                  )}
-                                </td>
-                              );
-                            })}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                                    {ongoing && (
+                                      <span className="px-2 py-0.5 bg-orange-500 text-white text-[9px] font-black uppercase rounded-full tracking-wider">
+                                        Ongoing
+                                      </span>
+                                    )}
+                                    {isNext && !ongoing && (
+                                      <span className="px-2 py-0.5 bg-indigo-100 text-indigo-600 text-[9px] font-black uppercase rounded-full tracking-wider">
+                                        Next Up
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-slate-600 mt-1.5 flex items-center gap-1.5">
+                                    👨‍🏫 {slot.teacherName || "Not Assigned"}
+                                  </div>
+                                  <div className="text-xs font-mono text-slate-500 mt-1 flex items-center gap-1.5">
+                                    🕘 {slot.time}
+                                  </div>
+                                </div>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase bg-slate-50 border border-slate-100 px-2.5 py-1 rounded-full shrink-0">
+                                  Period{" "}
+                                  {[
+                                    "1st",
+                                    "2nd",
+                                    "3rd",
+                                    "4th",
+                                    "5th",
+                                    "6th",
+                                    "7th",
+                                  ].indexOf(slot.period) + 1}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
             )}
 
-            {/* TAB 6: NOTICES / HOMEWORK */}
             {activeTab === "notices" && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
                 <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
@@ -2103,7 +2442,6 @@ export const ParentDashboard = () => {
               </div>
             )}
 
-            {/* TAB 7: LIBRARY / RESOURCES */}
             {activeTab === "resources" && (
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
                 <h3 className="text-base font-extrabold text-slate-800 mb-6">
@@ -2135,14 +2473,12 @@ export const ParentDashboard = () => {
               </div>
             )}
 
-            {/* TAB 8: PROFILE */}
             {activeTab === "profile" && (
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm max-w-2xl">
                 <h3 className="text-base font-extrabold text-slate-800 mb-6">
                   Student Enrollment File
                 </h3>
 
-                {/* Official Read-Only Details */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 text-xs text-slate-600 bg-slate-50 p-4 rounded-2xl border border-slate-100 mb-8">
                   <div>
                     <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">
