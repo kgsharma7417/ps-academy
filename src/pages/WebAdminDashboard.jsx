@@ -1,8 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import {
+  db,
+  setDoc,
+  doc,
+  getDoc,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  query,
+  orderBy,
+  where,
+} from "../firebase";
+import { uploadImageToCloudinary } from "../utils/cloudinary";
 
-// ─── Icons (inline SVG to avoid extra deps) ──────────────────────────────────
 const Icon = ({ d, size = 16 }) => (
   <svg
     width={size}
@@ -34,128 +47,91 @@ const ICONS = {
   trash:
     "M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2",
   edit: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7 M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
-  link: "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
   upload: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4 M17 8l-5-5-5 5 M12 3v12",
   layout: "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
   bell: "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9 M13.73 21a2 2 0 0 1-3.46 0",
   users:
     "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75",
   grid: "M3 3h7v7H3z M14 3h7v7h-7z M14 14h7v7h-7z M3 14h7v7H3z",
-  arrowL: "M19 12H5 M12 19l-7-7 7-7",
   x: "M18 6 6 18 M6 6l12 12",
-  chevD: "M6 9l6 6 6-6",
   move: "M5 9l-3 3 3 3 M9 5l3-3 3 3 M15 19l-3 3-3-3 M19 9l3 3-3 3 M2 12h20 M12 2v20",
+  speaker:
+    "M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07",
+  book: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z",
+  info: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z M12 16v-4 M12 8h.01",
 };
 
-// ─── Default content (mirrors LandingPage.jsx — PS Academy Semra Khandoli, Agra) ───
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// DEFAULT CONTENT — matches new LandingPage.jsx structure
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const DEFAULT_CONTENT = {
-  // Hero
-  heroTitle: "P.S. Academy",
-  heroSubtitle:
-    "P.S. Academy Semra Khandoli, Agra mein ek up-board se affiliates school hai. Hum bachon ki shiksha aur unke sarvagina vikas ke liye pratibaddh hain — academic excellence, naitik mulya, aur holistic development.",
-  heroImageUrl:
-    "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop",
-  ctaText: "Admission ke liye sampark karein →",
-  ctaSecondary: "Hamare School ko jaanein",
-  heroBadge: "Admissions Open 2025–26",
-  // Stats
-  statsStudents: 4050,
-  statsFaculty: 330,
-  statsLabs: 12,
+  schoolName: "P.S. Academy",
+  schoolTagline: "Dare to Dream... Learn to Excel",
+  affiliationText: "CBSE Affiliation No: 2132163",
+  topPhone: "+91 99271 70258",
+  topEmail: "psacademysemra@gmail.com",
+
+  heroSlides: [
+    {
+      image:
+        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1920&auto=format&fit=crop",
+      title: "Welcome to P.S. Academy",
+      subtitle: "Semra Khandoli, Agra mein ek pratishthit shikshan sanstha.",
+      badge: "Admissions Open 2025–26",
+    },
+    {
+      image:
+        "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1920&auto=format&fit=crop",
+      title: "Aadhunik Shiksha ka Kendra",
+      subtitle: "Vigyan labs, computer labs, library aur khel maidan.",
+      badge: "CBSE Affiliated School",
+    },
+    {
+      image:
+        "https://images.unsplash.com/photo-1571260899304-425eee4c7efc?q=80&w=1920&auto=format&fit=crop",
+      title: "Sarvangin Vikas ki Ore",
+      subtitle: "Khel, kala aur naitik shiksha ke saath har bachche ka vikas.",
+      badge: "Est. 2005",
+    },
+  ],
+
+  statsStudents: 1250,
+  statsFaculty: 85,
   statsPassRate: 96,
   statsYears: 20,
-  // Slider images
-  slides: [
-    {
-      src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=1200&auto=format&fit=crop",
-      caption: "🏫 P.S. Academy Semra Khandoli — Agra",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=1200&auto=format&fit=crop",
-      caption: "📚 Aadhunik Classes — Gyan ki nai pehchan",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=1200&auto=format&fit=crop",
-      caption: "🔬 Science Labs — Practical Shiksha",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=1200&auto=format&fit=crop",
-      caption: "⚽ Khel Ka Maidan — Sarvangin Vikas",
-    },
+
+  aboutTitle: "Hamara Vishwas",
+  aboutDesc:
+    "P.S. Academy Semra Khandoli, Agra mein hum maante hain ki shiksha sirf kitaabi gyan nahi...",
+  aboutMission:
+    "Gyan, anushasan aur samvedansheelta ke saath ek behtar samaj ka nirmaan.",
+  aboutImage:
+    "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=1200&auto=format&fit=crop",
+  aboutFeatures: [
+    "CBSE Affiliated (2132163)",
+    "Science & Computer Labs",
+    "Sports Ground & Library",
+    "Music, Dance & Art Classes",
   ],
-  // Gallery
-  gallery: [
-    {
-      src: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?q=80&w=800&auto=format&fit=crop",
-      caption: "📍 P.S. Academy Campus — Semra Khandoli",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=600&auto=format&fit=crop",
-      caption: "🏫 Aadhunik Classes",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1564186763535-ebb21ef5277f?q=80&w=600&auto=format&fit=crop",
-      caption: "🔬 Science Laboratory",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=600&auto=format&fit=crop",
-      caption: "⚽ Sports Ground",
-    },
-    {
-      src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&auto=format&fit=crop",
-      caption: "🎭 Varshik Samaroh",
-    },
-  ],
-  // Principal quote strip
-  principalQuoteShort:
-    "Shiksha ka uddeshya sirf marks nahi hai — yeh har bachche mein jigyasa, anushasan aur manavta ki lau jalane ka madhyam hai. P.S. Academy mein hum pratyek vidyarthi mein apni mahima pahchanne mein vishwas rakhte hain.",
-  principalName: "Principal - P.S. Academy",
-  principalFull: `Shiksha ka uddeshya sirf akademik vikas nahi, balki ek aisa vatavaran banana hai jahan vidyarthi aur shikshak dono apne lakshya ko prapt kar sake. P.S. Academy Semra Khandoli, Agra mein hum bachchon ko theory aur practical dono mein maharat hasil karne ka avsar pradan karte hain. Humari jimmedari hai ki har bachche ko aise sthal pradan karein jo unki shiksha aur sahavidyarthi vikas mein sahayak ho.`,
-  managerName: "P.S. Academy Prabandhan Samiti",
-  managerFull: `P.S. Academy Semra Khandoli, Agra ka prabandhan samiti hamesha se ek aisi shikshan sanstha pradan karne ke liye pratibaddh raha hai jo sabke liye sulabh, sasta aur uttam koti ki ho. Humne aadhunik classes, yogya teachers aur ek aisa mahaul banaya hai jo jigyasa aur vikas ko badhava de. Hamare vidyarthi hi hamari sabse badi uplabdhi hain.`,
-  // Contact
-  contactAddress: "P.S. Academy, Semra Khandoli, Agra, Uttar Pradesh",
-  contactPhone: "+91 99271 70258",
-  contactPhoneAdmission: "+91 99271 70258",
-  contactEmail: "psacademysemra@gmail.com",
-  contactHours: "Mon – Sat: 8:00 AM – 3:00 PM",
-  // Notices
-  notices: [
-    {
-      day: "01",
-      mon: "Apr",
-      title: "Naye Shiksha Sesh 2025–26 ke liye Admission Khule",
-      desc: "Class 1 se 11 tak admission khule hain. School office se sampark karein 9 AM se 2 PM ke beech. Aavashyak dastawej: Birth certificate, marksheet, Aadhar card.",
-      tag: "event",
-    },
-    {
-      day: "15",
-      mon: "Aug",
-      title: "Swatantrata Diwas Samaroh – 15 August",
-      desc: "Sabhi vidyarthi aur staff 15 August ko 7:00 AM par upasthit rahein. Jhanda fahran aur sanskritik karyakram honge. White uniform anivarya hai.",
-      tag: "event",
-    },
-    {
-      day: "10",
-      mon: "Jun",
-      title: "Parent-Teacher Meeting – Class 6 se 10",
-      desc: "Classes 6 se 10 ki PTM 22 June (Shanivar) 9 AM – 1 PM ke beech hogi. Abhibhavak apne bachche ki progress report lena na bhoolen.",
-      tag: "meeting",
-    },
-    {
-      day: "05",
-      mon: "Jun",
-      title: "Garmi ki Chhuttiyan",
-      desc: "Vidyalay 20 June se 30 June tak garmi ki chhuttiyon ke liye band rahega. Classes 1 July se punah suru hongi.",
-      tag: "holiday",
-    },
-  ],
-  // Why-us
+
+  principalName: "Mrs. Savita Sharma",
+  principalQuote:
+    "Shiksha ka uddeshya sirf marks nahi hai — yeh har bachche mein jigyasa, anushasan aur manavta ki lau jalane ka madhyam hai.",
+  principalRole: "Principal",
+  principalPhoto:
+    "https://images.unsplash.com/photo-1607990283143-e81e7a2c9349?q=80&w=800&auto=format&fit=crop",
+  managerName: "Shri Gopal Sharma",
+  managerQuote:
+    "P.S. Academy Semra Khandoli, Agra ka prabandhan samiti hamesha se ek aisi shikshan sanstha pradan karne ke liye pratibaddh raha hai.",
+  managerRole: "Chairman, Board of Management",
+  managerPhoto:
+    "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=800&auto=format&fit=crop",
+
   whyCards: [
     {
       icon: "🏆",
       title: "Academic Excellence",
-      desc: "UP Board exams mein lagatar behtarin parinam — 96%+ pass rate har saal.",
+      desc: "CBSE board mein lagatar behtarin parinam — 96%+ pass rate har saal.",
     },
     {
       icon: "🕉️",
@@ -170,43 +146,107 @@ const DEFAULT_CONTENT = {
     {
       icon: "⚽",
       title: "Khel aur Kala",
-      desc: "Varshik khel samaroh, sanskritik karyakram, drawing competition — pratibha ki pehchan.",
+      desc: "Varshik khel samaroh, sanskritik karyakram — har pratibha ko pehchan.",
+    },
+    {
+      icon: "📚",
+      title: "Pustakalay",
+      desc: "1000+ books ka library — gyan ka sampoorna bhandar.",
+    },
+    {
+      icon: "🎵",
+      title: "Sangeet aur Nritya",
+      desc: "Music, dance aur art & craft — sanskritik vikas ke liye.",
     },
   ],
+
+  classes: [
+    {
+      image:
+        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=800&auto=format&fit=crop",
+      tag: "Primary",
+      title: "Classes I – V",
+      desc: "Buniyadi shiksha, khel-khel mein gyan.",
+    },
+    {
+      image:
+        "https://images.unsplash.com/photo-1509062522246-3755977927d7?q=80&w=800&auto=format&fit=crop",
+      tag: "Middle",
+      title: "Classes VI – VIII",
+      desc: "Science, Maths, Social Studies mein gahrai.",
+    },
+    {
+      image:
+        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=800&auto=format&fit=crop",
+      tag: "Senior",
+      title: "Classes IX – XII",
+      desc: "Board exam ki taiyari aur career nirman.",
+    },
+  ],
+
+  announcements: [
+    "🎓 Admissions Open for Session 2025-26 — Class I to XI Apply Now!",
+    "🏆 P.S. Academy achieved 96% pass rate in CBSE Board Exams 2025",
+    "📢 Parent-Teacher Meeting on 22 June — All Parents are requested to attend",
+    "🎭 Annual Day Celebration will be held in December",
+    "📚 New Library inaugurated — Over 1000 books now available",
+  ],
+
+  notices: [
+    {
+      day: "01",
+      mon: "Apr",
+      title: "Naye Shiksha Sesh 2025–26 ke liye Admission Khule",
+      desc: "Class 1 se 11 tak admission khule hain.",
+      tag: "event",
+    },
+    {
+      day: "15",
+      mon: "Aug",
+      title: "Swatantrata Diwas Samaroh – 15 August",
+      desc: "Sabhi vidyarthi aur staff 7:00 AM par upasthit rahein.",
+      tag: "event",
+    },
+    {
+      day: "10",
+      mon: "Jun",
+      title: "Parent-Teacher Meeting – Class 6 se 10",
+      desc: "PTM 22 June (Shanivar) 9 AM – 1 PM ke beech.",
+      tag: "meeting",
+    },
+    {
+      day: "05",
+      mon: "Jun",
+      title: "Garmi ki Chhuttiyan",
+      desc: "Vidyalay 20 June se 30 June tak band rahega.",
+      tag: "holiday",
+    },
+  ],
+
+  contactAddress: "P.S. Academy, Semra Khandoli, Agra, Uttar Pradesh",
+  contactPhone: "+91 99271 70258",
+  contactEmail: "psacademysemra@gmail.com",
+  contactHours: "Mon – Sat: 8:00 AM – 3:00 PM",
+
+  socialLinks: { facebook: "#", instagram: "#", youtube: "#" },
 };
 
-// ─── STYLES ───────────────────────────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// STYLES
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const STYLES = `
   *, *::before, *::after { box-sizing: border-box; }
   :root {
-    --ink: #0f1117;
-    --ink2: #3d4151;
-    --ink3: #6b7280;
-    --line: #e5e7eb;
-    --surface: #f8f9fb;
-    --white: #ffffff;
-    --blue: #2563eb;
-    --blue-l: #eff4ff;
-    --blue-d: #1d4ed8;
-    --green: #16a34a;
-    --green-l: #f0fdf4;
-    --red: #dc2626;
-    --red-l: #fef2f2;
-    --amber: #d97706;
-    --amber-l: #fffbeb;
-    --purple: #7c3aed;
-    --purple-l: #f5f3ff;
-    --radius: 10px;
+    --ink: #0f1117; --ink2: #3d4151; --ink3: #6b7280; --line: #e5e7eb;
+    --surface: #f8f9fb; --white: #ffffff; --blue: #2563eb; --blue-l: #eff4ff;
+    --blue-d: #1d4ed8; --green: #16a34a; --green-l: #f0fdf4; --red: #dc2626;
+    --red-l: #fef2f2; --amber: #d97706; --amber-l: #fffbeb; --purple: #7c3aed;
+    --purple-l: #f5f3ff; --radius: 10px;
     --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
     --shadow-md: 0 4px 12px rgba(0,0,0,.1);
   }
   .wad-wrap { display: flex; min-height: 100vh; background: var(--surface); font-family: 'Inter', system-ui, sans-serif; color: var(--ink); }
-
-  /* Sidebar */
-  .wad-sidebar {
-    width: 230px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--line);
-    position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column;
-  }
+  .wad-sidebar { width: 230px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--line); position: sticky; top: 0; height: 100vh; overflow-y: auto; display: flex; flex-direction: column; }
   .wad-logo { padding: 20px 18px 16px; border-bottom: 1px solid var(--line); }
   .wad-logo-top { display: flex; align-items: center; gap: 10px; }
   .wad-logo-icon { width: 34px; height: 34px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0; }
@@ -214,66 +254,34 @@ const STYLES = `
   .wad-logo-sub { font-size: 10.5px; color: var(--ink3); margin-top: 1px; }
   .wad-nav { flex: 1; padding: 12px 10px; display: flex; flex-direction: column; gap: 2px; }
   .wad-nav-section { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--ink3); padding: 10px 8px 4px; }
-  .wad-nav-btn {
-    display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px;
-    border: none; background: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink2);
-    text-align: left; width: 100%; transition: all .15s;
-  }
+  .wad-nav-btn { display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: 8px; border: none; background: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink2); text-align: left; width: 100%; transition: all .15s; }
   .wad-nav-btn:hover { background: var(--surface); color: var(--ink); }
   .wad-nav-btn.active { background: var(--blue-l); color: var(--blue); font-weight: 600; }
   .wad-nav-btn .nb-icon { width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: var(--surface); flex-shrink: 0; transition: all .15s; }
   .wad-nav-btn.active .nb-icon { background: var(--blue); color: #fff; }
   .wad-nav-footer { padding: 12px 10px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
-  .wad-nav-footer-btn {
-    display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px;
-    border: none; background: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500;
-    text-align: left; width: 100%; transition: all .15s; text-decoration: none;
-  }
+  .wad-nav-footer-btn { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 8px; border: none; background: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; text-align: left; width: 100%; transition: all .15s; text-decoration: none; }
   .wad-nav-footer-btn.view { color: var(--blue); } .wad-nav-footer-btn.view:hover { background: var(--blue-l); }
   .wad-nav-footer-btn.logout { color: var(--red); } .wad-nav-footer-btn.logout:hover { background: var(--red-l); }
-
-  /* Main */
   .wad-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   .wad-topbar { background: var(--white); border-bottom: 1px solid var(--line); padding: 0 28px; height: 56px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 20; }
   .wad-topbar-left { display: flex; align-items: center; gap: 10px; }
   .wad-topbar-title { font-size: 15px; font-weight: 700; color: var(--ink); }
-  .wad-topbar-sub { font-size: 12px; color: var(--ink3); }
   .wad-breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink3); }
-  .wad-save-btn {
-    display: flex; align-items: center; gap: 6px; padding: 8px 18px;
-    background: var(--blue); color: #fff; border: none; border-radius: 8px;
-    font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s;
-  }
+  .wad-save-btn { display: flex; align-items: center; gap: 6px; padding: 8px 18px; background: var(--blue); color: #fff; border: none; border-radius: 8px; font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: background .15s; }
   .wad-save-btn:hover { background: var(--blue-d); }
   .wad-content { flex: 1; padding: 24px 28px; overflow-y: auto; }
-
-  /* Toast */
-  .wad-toast {
-    position: fixed; bottom: 24px; right: 24px; z-index: 999;
-    display: flex; align-items: center; gap: 10px; padding: 12px 20px;
-    background: var(--ink); color: #fff; border-radius: var(--radius);
-    font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md);
-    animation: wToastIn .25s ease;
-  }
+  .wad-toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: flex; align-items: center; gap: 10px; padding: 12px 20px; background: var(--ink); color: #fff; border-radius: var(--radius); font-size: 13px; font-weight: 500; box-shadow: var(--shadow-md); animation: wToastIn .25s ease; }
   @keyframes wToastIn { from { opacity:0; transform: translateY(8px); } to { opacity:1; transform: translateY(0); } }
-  .wad-toast.success { background: var(--green); }
-  .wad-toast.error   { background: var(--red); }
-
-  /* Cards */
+  .wad-toast.success { background: var(--green); } .wad-toast.error { background: var(--red); }
   .wad-card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 20px; overflow: hidden; }
   .wad-card-header { padding: 14px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; background: #fafafa; }
   .wad-card-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--ink); }
   .wad-card-title .ct-icon { width: 26px; height: 26px; border-radius: 6px; background: var(--blue-l); color: var(--blue); display: flex; align-items: center; justify-content: center; }
   .wad-card-body { padding: 20px; }
-
-  /* Form fields */
   .wad-field { margin-bottom: 16px; }
   .wad-label { display: block; font-size: 11.5px; font-weight: 600; color: var(--ink2); margin-bottom: 5px; text-transform: uppercase; letter-spacing: .05em; }
-  .wad-input, .wad-textarea, .wad-select {
-    width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px;
-    font-family: inherit; font-size: 13px; color: var(--ink); background: var(--white); outline: none;
-    transition: border-color .15s, box-shadow .15s;
-  }
+  .wad-input, .wad-textarea, .wad-select { width: 100%; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; font-family: inherit; font-size: 13px; color: var(--ink); background: var(--white); outline: none; transition: border-color .15s, box-shadow .15s; }
   .wad-input:focus, .wad-textarea:focus, .wad-select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
   .wad-textarea { resize: vertical; }
   .wad-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -281,8 +289,6 @@ const STYLES = `
   .wad-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
   @media (max-width: 900px) { .wad-grid-4 { grid-template-columns: 1fr 1fr; } .wad-grid-3 { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 600px) { .wad-grid-2, .wad-grid-3, .wad-grid-4 { grid-template-columns: 1fr; } .wad-sidebar { display: none; } }
-
-  /* Image picker */
   .wad-img-picker { border: 2px dashed var(--line); border-radius: var(--radius); overflow: hidden; background: var(--surface); }
   .wad-img-preview { width: 100%; height: 180px; object-fit: cover; display: block; }
   .wad-img-preview.tall { height: 220px; }
@@ -290,8 +296,6 @@ const STYLES = `
   .wad-img-url-row { padding: 12px 14px; border-top: 1px solid var(--line); display: flex; gap: 8px; }
   .wad-img-url-row .wad-input { flex: 1; }
   .wad-img-empty { height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--ink3); font-size: 13px; }
-
-  /* Pill buttons */
   .wad-btn { display: inline-flex; align-items: center; gap: 5px; padding: 7px 13px; border-radius: 7px; border: 1px solid var(--line); background: var(--white); font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .15s; color: var(--ink2); }
   .wad-btn:hover { background: var(--surface); border-color: #d1d5db; }
   .wad-btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
@@ -301,8 +305,6 @@ const STYLES = `
   .wad-btn.success { background: var(--green-l); color: var(--green); border-color: #bbf7d0; }
   .wad-btn.sm { padding: 5px 9px; font-size: 11px; }
   .wad-btn.icon-only { padding: 6px; }
-
-  /* List items (notices, slides, gallery) */
   .wad-list { display: flex; flex-direction: column; gap: 10px; }
   .wad-list-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; position: relative; }
   .wad-list-item-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
@@ -310,8 +312,6 @@ const STYLES = `
   .wad-list-actions { display: flex; gap: 5px; flex-shrink: 0; }
   .wad-add-row { padding: 12px; border: 2px dashed var(--line); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; gap: 7px; background: var(--white); cursor: pointer; font-size: 13px; font-weight: 600; color: var(--blue); transition: all .15s; border-style: dashed; }
   .wad-add-row:hover { background: var(--blue-l); border-color: var(--blue); }
-
-  /* Gallery grid (preview) */
   .wad-gal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
   .wad-gal-item { border-radius: 8px; overflow: hidden; position: relative; border: 1px solid var(--line); aspect-ratio: 4/3; background: var(--surface); }
   .wad-gal-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -319,8 +319,6 @@ const STYLES = `
   .wad-gal-item:hover .wad-gal-overlay { display: flex; }
   .wad-gal-add { border: 2px dashed var(--line); border-radius: 8px; aspect-ratio: 4/3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; cursor: pointer; color: var(--blue); font-size: 12px; font-weight: 600; background: var(--white); transition: all .15s; }
   .wad-gal-add:hover { background: var(--blue-l); border-color: var(--blue); }
-
-  /* Slides horizontal preview */
   .wad-slide-strip { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
   .wad-slide-thumb { position: relative; flex-shrink: 0; width: 200px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); aspect-ratio: 16/9; background: var(--surface); cursor: pointer; }
   .wad-slide-thumb img { width: 100%; height: 100%; object-fit: cover; }
@@ -329,42 +327,24 @@ const STYLES = `
   .wad-slide-thumb:hover .st-del { display: flex; }
   .wad-slide-add { flex-shrink: 0; width: 200px; aspect-ratio: 16/9; border: 2px dashed var(--line); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; color: var(--blue); font-size: 12px; font-weight: 600; background: var(--white); transition: all .15s; }
   .wad-slide-add:hover { background: var(--blue-l); border-color: var(--blue); }
-
-  /* Tab bar */
-  .wad-tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); margin-bottom: 20px; overflow-x: auto; }
-  .wad-tab { padding: 9px 16px; border: none; background: none; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ink3); cursor: pointer; border-bottom: 2px solid transparent; transition: all .15s; white-space: nowrap; }
-  .wad-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
-  .wad-tab:hover:not(.active) { color: var(--ink2); background: var(--surface); border-radius: 6px 6px 0 0; }
-
-  /* Modal overlay */
   .wad-modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 20px; }
   .wad-modal { background: var(--white); border-radius: 14px; width: 100%; max-width: 540px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-md); }
   .wad-modal-header { padding: 18px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; }
   .wad-modal-title { font-size: 15px; font-weight: 700; }
   .wad-modal-body { padding: 20px; }
   .wad-modal-footer { padding: 14px 20px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; }
-
-  /* Notice tag badge */
   .ntag { display: inline-block; padding: 2px 8px; border-radius: 100px; font-size: 10px; font-weight: 700; }
-  .ntag.exam     { background: #fbe3dc; color: #8f3f23; }
-  .ntag.event    { background: #e3e9fb; color: #2d3f8f; }
-  .ntag.holiday  { background: #e2ecd9; color: #3f5a2a; }
-  .ntag.meeting  { background: #fffbeb; color: #8a5a06; }
-
-  /* Why cards */
+  .ntag.exam { background: #fbe3dc; color: #8f3f23; }
+  .ntag.event { background: #e3e9fb; color: #2d3f8f; }
+  .ntag.holiday { background: #e2ecd9; color: #3f5a2a; }
+  .ntag.meeting { background: #fffbeb; color: #8a5a06; }
   .wad-why-item { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
   .wad-why-icon-picker { font-size: 24px; cursor: pointer; padding: 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--white); width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .wad-why-fields { flex: 1; display: flex; flex-direction: column; gap: 8px; }
-
-  /* Stat counter card */
   .wad-stat-card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; text-align: center; }
   .wad-stat-card .sc-label { font-size: 11px; color: var(--ink3); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
   .wad-stat-card input { text-align: center; font-size: 22px; font-weight: 700; color: var(--blue); }
-
-  /* Unsaved indicator */
   .wad-unsaved-dot { width: 7px; height: 7px; background: var(--amber); border-radius: 50%; display: inline-block; margin-left: 6px; }
-
-  /* Overview page */
   .wad-overview-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
   .wad-ov-card { background: var(--white); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 16px; display: flex; align-items: center; gap: 13px; cursor: pointer; transition: all .15s; }
   .wad-ov-card:hover { border-color: var(--blue); box-shadow: var(--shadow-md); }
@@ -373,32 +353,35 @@ const STYLES = `
   .wad-ov-sub { font-size: 11px; color: var(--ink3); }
   .wad-reset-btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--white); font-family: inherit; font-size: 12px; font-weight: 600; color: var(--ink3); cursor: pointer; transition: all .15s; }
   .wad-reset-btn:hover { background: var(--red-l); color: var(--red); border-color: #fecaca; }
+  .announce-item { padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .announce-item .ai-text { flex: 1; font-size: 13px; }
+  .gal-collection-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .gal-col-item { border-radius: 8px; overflow: hidden; border: 1px solid var(--line); position: relative; aspect-ratio: 4/3; background: var(--surface); }
+  .gal-col-item img { width: 100%; height: 100%; object-fit: cover; }
+  .gal-col-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.6); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 12px; }
+  .gal-col-item:hover .gal-col-overlay { display: flex; }
+  .gal-col-overlay .gco-event { color: var(--gold); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+  .gal-col-overlay .gco-date { color: #fff; font-size: 10px; }
+  .tag-pill { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; }
+  .tag-annual { background: #fce8e6; color: #d93025; }
+  .tag-sports { background: #e8f0fe; color: #1a73e8; }
+  .tag-science { background: #e6f4ea; color: #1e8e3e; }
+  .tag-cultural { background: #f3e8fd; color: #9334e6; }
+  .tag-republic { background: #fef7e0; color: #e37400; }
+  .tag-other { background: var(--surface); color: var(--ink3); }
+  @media (max-width: 768px) { .gal-collection-grid { grid-template-columns: repeat(2, 1fr); } }
 `;
 
-const STORAGE_KEY = "school_erp_landing_content_v2";
-
-// ─── Image Picker Component ───────────────────────────────────────────────────
-function ImagePicker({
-  value,
-  onChange,
-  label,
-  tall = false,
-  showCaption = false,
-  caption = "",
-  onCaptionChange,
-}) {
-  const [mode, setMode] = useState("url"); // "url" | "gallery" | "upload"
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// IMAGE PICKER COMPONENT
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function ImagePicker({ value, onChange, label, tall = false }) {
+  const [mode, setMode] = useState("url");
   const [urlInput, setUrlInput] = useState(value || "");
   const [imgError, setImgError] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // FIX: keep urlInput in sync whenever the parent-controlled `value`
-  // changes from outside this component (e.g. switching sections,
-  // editing a different slide/gallery item, or loading saved content).
-  // Without this, the URL field could show stale/empty text even
-  // though the underlying value was updated, making edits look like
-  // they "didn't save" when they actually did.
   useEffect(() => {
     setUrlInput(value || "");
     setImgError(false);
@@ -455,36 +438,30 @@ function ImagePicker({
     },
   ];
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    // Validate file type
     if (!file.type.startsWith("image/")) {
       setImgError(true);
       return;
     }
-
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size 5MB se zyada hai. Chhota file select karein.");
+      alert("File size 5MB se zyada hai.");
       return;
     }
-
     setUploading(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const base64 = event.target.result;
-      onChange(base64);
-      setUrlInput(base64);
+    try {
+      const secureUrl = await uploadImageToCloudinary(file);
+      onChange(secureUrl);
+      setUrlInput(secureUrl);
       setImgError(false);
-      setUploading(false);
-    };
-    reader.onerror = () => {
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed: " + error.message);
       setImgError(true);
+    } finally {
       setUploading(false);
-    };
-    reader.readAsDataURL(file);
+    }
   };
 
   const applyUrl = () => {
@@ -498,7 +475,6 @@ function ImagePicker({
     <div>
       {label && <label className="wad-label">{label}</label>}
       <div className="wad-img-picker">
-        {/* Mode toggle - 3 tabs: URL, Gallery, Upload */}
         <div style={{ display: "flex", borderBottom: "1px solid var(--line)" }}>
           {["url", "gallery", "upload"].map((m) => (
             <button
@@ -522,15 +498,13 @@ function ImagePicker({
               }}
             >
               {m === "url"
-                ? "🔗 URL se daalo"
+                ? "🔗 URL"
                 : m === "gallery"
-                  ? "🖼️ Gallery se chuno"
-                  : "📁 Computer se upload karo"}
+                  ? "🖼️ Gallery"
+                  : "📁 Upload"}
             </button>
           ))}
         </div>
-
-        {/* Preview */}
         {value && !imgError ? (
           <img
             src={value}
@@ -541,15 +515,9 @@ function ImagePicker({
         ) : (
           <div className="wad-img-empty">
             <Icon d={ICONS.image} size={32} />
-            <span>
-              {imgError
-                ? "Image load nahi hui — naya URL daalo"
-                : "Koi image select nahi ki"}
-            </span>
+            <span>{imgError ? "Image load nahi hui" : "Koi image nahi"}</span>
           </div>
         )}
-
-        {/* URL mode */}
         {mode === "url" && (
           <div className="wad-img-url-row">
             <input
@@ -577,8 +545,6 @@ function ImagePicker({
             )}
           </div>
         )}
-
-        {/* Gallery mode */}
         {mode === "gallery" && (
           <div style={{ padding: 12 }}>
             <div
@@ -658,8 +624,6 @@ function ImagePicker({
             </div>
           </div>
         )}
-
-        {/* Upload mode - Local file picker */}
         {mode === "upload" && (
           <div style={{ padding: 16, textAlign: "center" }}>
             <input
@@ -697,12 +661,10 @@ function ImagePicker({
                   color: "var(--ink2)",
                 }}
               >
-                {uploading
-                  ? "Upload ho raha hai..."
-                  : "Click karo ya image yahan drag karo"}
+                {uploading ? "Upload ho raha..." : "Click karo ya drag karo"}
               </p>
               <p style={{ marginTop: 4, fontSize: 11, color: "var(--ink3)" }}>
-                JPG, PNG, GIF, WebP — Max 5MB
+                JPG, PNG, WebP — Max 5MB
               </p>
             </div>
             {uploading && (
@@ -714,36 +676,9 @@ function ImagePicker({
                   fontWeight: 600,
                 }}
               >
-                ⏳ Image load ho rahi hai...
+                ⏳ Loading...
               </div>
             )}
-            {value && mode === "upload" && (
-              <button
-                className="wad-btn danger sm"
-                style={{ marginTop: 8 }}
-                onClick={() => {
-                  onChange("");
-                  setUrlInput("");
-                  setImgError(false);
-                }}
-              >
-                <Icon d={ICONS.x} size={13} /> Hatayein
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Caption field */}
-        {showCaption && (
-          <div
-            style={{ padding: "10px 14px", borderTop: "1px solid var(--line)" }}
-          >
-            <input
-              className="wad-input"
-              placeholder="Caption text (e.g. 📍 Main School Building)"
-              value={caption}
-              onChange={(e) => onCaptionChange(e.target.value)}
-            />
           </div>
         )}
       </div>
@@ -751,7 +686,9 @@ function ImagePicker({
   );
 }
 
-// ─── Notice Modal ─────────────────────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// NOTICE MODAL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 function NoticeModal({ notice, onSave, onClose }) {
   const [form, setForm] = useState(
     notice || { day: "", mon: "Jan", title: "", desc: "", tag: "event" },
@@ -779,7 +716,7 @@ function NoticeModal({ notice, onSave, onClose }) {
       <div className="wad-modal">
         <div className="wad-modal-header">
           <div className="wad-modal-title">
-            📋 {notice ? "Notice Edit karo" : "Naya Notice"}
+            📋 {notice ? "Edit Notice" : "Naya Notice"}
           </div>
           <button className="wad-btn sm icon-only" onClick={onClose}>
             <Icon d={ICONS.x} size={14} />
@@ -788,7 +725,7 @@ function NoticeModal({ notice, onSave, onClose }) {
         <div className="wad-modal-body">
           <div className="wad-grid-2" style={{ marginBottom: 14 }}>
             <div className="wad-field">
-              <label className="wad-label">Din (Day)</label>
+              <label className="wad-label">Day</label>
               <input
                 className="wad-input"
                 type="number"
@@ -796,11 +733,10 @@ function NoticeModal({ notice, onSave, onClose }) {
                 max="31"
                 value={form.day}
                 onChange={(e) => set("day", e.target.value)}
-                placeholder="20"
               />
             </div>
             <div className="wad-field">
-              <label className="wad-label">Mahina (Month)</label>
+              <label className="wad-label">Month</label>
               <select
                 className="wad-select"
                 value={form.mon}
@@ -813,26 +749,24 @@ function NoticeModal({ notice, onSave, onClose }) {
             </div>
           </div>
           <div className="wad-field">
-            <label className="wad-label">Notice Heading</label>
+            <label className="wad-label">Heading</label>
             <input
               className="wad-input"
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
-              placeholder="Exam schedule, event, holiday..."
             />
           </div>
           <div className="wad-field">
-            <label className="wad-label">Vivaran (Description)</label>
+            <label className="wad-label">Description</label>
             <textarea
               className="wad-textarea"
               rows={3}
               value={form.desc}
               onChange={(e) => set("desc", e.target.value)}
-              placeholder="Notice ki poori jankari..."
             />
           </div>
           <div className="wad-field">
-            <label className="wad-label">Category</label>
+            <label className="wad-label">Tag</label>
             <select
               className="wad-select"
               value={form.tag}
@@ -840,7 +774,7 @@ function NoticeModal({ notice, onSave, onClose }) {
             >
               <option value="exam">📝 Exam</option>
               <option value="event">🎉 Event</option>
-              <option value="meeting">👨‍👩‍👧 PTM / Meeting</option>
+              <option value="meeting">👨‍👩‍👧 Meeting</option>
               <option value="holiday">🌿 Holiday</option>
             </select>
           </div>
@@ -855,7 +789,7 @@ function NoticeModal({ notice, onSave, onClose }) {
               if (form.title && form.day) onSave(form);
             }}
           >
-            <Icon d={ICONS.save} size={13} /> Save Notice
+            <Icon d={ICONS.save} size={13} /> Save
           </button>
         </div>
       </div>
@@ -863,9 +797,13 @@ function NoticeModal({ notice, onSave, onClose }) {
   );
 }
 
-// ─── Slide Modal ──────────────────────────────────────────────────────────────
-function SlideModal({ slide, onSave, onClose }) {
-  const [form, setForm] = useState(slide || { src: "", caption: "" });
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// HERO SLIDE MODAL
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function HeroSlideModal({ slide, onSave, onClose }) {
+  const [form, setForm] = useState(
+    slide || { image: "", title: "", subtitle: "", badge: "" },
+  );
   return (
     <div
       className="wad-modal-bg"
@@ -874,20 +812,45 @@ function SlideModal({ slide, onSave, onClose }) {
       <div className="wad-modal">
         <div className="wad-modal-header">
           <div className="wad-modal-title">
-            🖼️ {slide ? "Slide Edit karo" : "Naya Slide Jodo"}
+            🖼️ {slide ? "Edit Slide" : "Naya Slide"}
           </div>
           <button className="wad-btn sm icon-only" onClick={onClose}>
             <Icon d={ICONS.x} size={14} />
           </button>
         </div>
         <div className="wad-modal-body">
+          <div className="wad-field">
+            <label className="wad-label">Title (Heading)</label>
+            <input
+              className="wad-input"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="Welcome to P.S. Academy"
+            />
+          </div>
+          <div className="wad-field">
+            <label className="wad-label">Subtitle</label>
+            <textarea
+              className="wad-textarea"
+              rows={2}
+              value={form.subtitle}
+              onChange={(e) => setForm({ ...form, subtitle: e.target.value })}
+              placeholder="Description text..."
+            />
+          </div>
+          <div className="wad-field">
+            <label className="wad-label">Badge Text</label>
+            <input
+              className="wad-input"
+              value={form.badge}
+              onChange={(e) => setForm({ ...form, badge: e.target.value })}
+              placeholder="Admissions Open 2025–26"
+            />
+          </div>
           <ImagePicker
-            value={form.src}
-            onChange={(src) => setForm((f) => ({ ...f, src }))}
-            label="Slide Image"
-            showCaption
-            caption={form.caption}
-            onCaptionChange={(caption) => setForm((f) => ({ ...f, caption }))}
+            label="Slide Image (1920×1080 recommended)"
+            value={form.image}
+            onChange={(v) => setForm({ ...form, image: v })}
           />
         </div>
         <div className="wad-modal-footer">
@@ -897,10 +860,10 @@ function SlideModal({ slide, onSave, onClose }) {
           <button
             className="wad-btn primary"
             onClick={() => {
-              if (form.src) onSave(form);
+              if (form.image && form.title) onSave(form);
             }}
           >
-            <Icon d={ICONS.save} size={13} /> Save Slide
+            <Icon d={ICONS.save} size={13} /> Save
           </button>
         </div>
       </div>
@@ -908,9 +871,29 @@ function SlideModal({ slide, onSave, onClose }) {
   );
 }
 
-// ─── Gallery Item Modal ────────────────────────────────────────────────────────
-function GalleryModal({ item, onSave, onClose }) {
-  const [form, setForm] = useState(item || { src: "", caption: "" });
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// GALLERY COLLECTION MODAL (for separate gallery collection)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+function GalleryCollectionModal({ item, onSave, onClose }) {
+  const [form, setForm] = useState(
+    item || {
+      image: "",
+      eventName: "Annual Day",
+      eventDate: "",
+      description: "",
+    },
+  );
+  const PRESET_EVENTS = [
+    "Annual Day",
+    "Sports Day",
+    "Science Fair",
+    "Cultural",
+    "Republic Day",
+    "Independence Day",
+    "Workshop",
+    "Field Trip",
+    "Other",
+  ];
   return (
     <div
       className="wad-modal-bg"
@@ -919,7 +902,7 @@ function GalleryModal({ item, onSave, onClose }) {
       <div className="wad-modal">
         <div className="wad-modal-header">
           <div className="wad-modal-title">
-            🖼️ {item ? "Gallery Photo Edit" : "Naya Gallery Photo"}
+            📸 {item ? "Edit Photo" : "Naya Photo"}
           </div>
           <button className="wad-btn sm icon-only" onClick={onClose}>
             <Icon d={ICONS.x} size={14} />
@@ -927,14 +910,66 @@ function GalleryModal({ item, onSave, onClose }) {
         </div>
         <div className="wad-modal-body">
           <ImagePicker
-            value={form.src}
-            onChange={(src) => setForm((f) => ({ ...f, src }))}
             label="Photo"
+            value={form.image}
+            onChange={(v) => setForm({ ...form, image: v })}
             tall
-            showCaption
-            caption={form.caption}
-            onCaptionChange={(caption) => setForm((f) => ({ ...f, caption }))}
           />
+          <div style={{ marginTop: 16 }} className="wad-field">
+            <label className="wad-label">Event Name</label>
+            <div style={{ display: "flex", gap: 8 }}>
+              <select
+                className="wad-select"
+                style={{ flex: 1 }}
+                value={
+                  PRESET_EVENTS.includes(form.eventName)
+                    ? form.eventName
+                    : "Other"
+                }
+                onChange={(e) =>
+                  setForm({ ...form, eventName: e.target.value })
+                }
+              >
+                {PRESET_EVENTS.map((ev) => (
+                  <option key={ev} value={ev}>
+                    {ev}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {!PRESET_EVENTS.includes(form.eventName) && (
+              <input
+                className="wad-input"
+                style={{ marginTop: 8 }}
+                placeholder="Custom event name..."
+                value={form.eventName}
+                onChange={(e) =>
+                  setForm({ ...form, eventName: e.target.value })
+                }
+              />
+            )}
+          </div>
+          <div className="wad-field">
+            <label className="wad-label">Event Date</label>
+            <input
+              className="wad-input"
+              type="date"
+              value={form.eventDate}
+              onChange={(e) => setForm({ ...form, eventDate: e.target.value })}
+            />
+          </div>
+          <div className="wad-field">
+            <label className="wad-label">Description (optional)</label>
+            <textarea
+              className="wad-textarea"
+              rows={2}
+              value={form.description}
+              onChange={(e) =>
+                setForm({ ...form, description: e.target.value })
+              }
+              placeholder="Photo ke baare mein..."
+            />
+          </div>
         </div>
         <div className="wad-modal-footer">
           <button className="wad-btn" onClick={onClose}>
@@ -943,10 +978,10 @@ function GalleryModal({ item, onSave, onClose }) {
           <button
             className="wad-btn primary"
             onClick={() => {
-              if (form.src) onSave(form);
+              if (form.image && form.eventName) onSave(form);
             }}
           >
-            <Icon d={ICONS.save} size={13} /> Save Photo
+            <Icon d={ICONS.save} size={13} /> Save
           </button>
         </div>
       </div>
@@ -954,150 +989,233 @@ function GalleryModal({ item, onSave, onClose }) {
   );
 }
 
-// ─── Main Dashboard ────────────────────────────────────────────────────────────
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// MAIN DASHBOARD
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 export const WebAdminDashboard = () => {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [section, setSection] = useState("overview");
   const [content, setContent] = useState(DEFAULT_CONTENT);
+  const [galleryCollection, setGalleryCollection] = useState([]);
   const [toast, setToast] = useState(null);
   const [unsaved, setUnsaved] = useState(false);
-  const [modal, setModal] = useState(null); // { type, data, index }
+  const [modal, setModal] = useState(null);
+  const [galFilter, setGalFilter] = useState("All");
 
+  // ── Load data ──
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setContent({ ...DEFAULT_CONTENT, ...JSON.parse(saved) });
-    } catch {}
+    const load = async () => {
+      try {
+        const snap = await getDoc(doc(db, "settings", "landingPage"));
+        if (snap.exists()) setContent({ ...DEFAULT_CONTENT, ...snap.data() });
+        else setContent(DEFAULT_CONTENT);
+      } catch (e) {
+        console.error("Load error:", e);
+      }
+    };
+    load();
+    loadGalleryCollection();
   }, []);
 
+  const loadGalleryCollection = async () => {
+    try {
+      const q = query(collection(db, "gallery"), orderBy("createdAt", "desc"));
+      const snap = await getDocs(q);
+      const items = [];
+      snap.forEach((d) => items.push({ id: d.id, ...d.data() }));
+      setGalleryCollection(items);
+    } catch (e) {
+      console.error("Gallery load error:", e);
+    }
+  };
+
+  // ── Setters ──
   const set = (key, val) => {
     setContent((c) => ({ ...c, [key]: val }));
     setUnsaved(true);
   };
-  const setNested = (key, idx, field, val) => {
-    setContent((c) => {
-      const arr = [...(c[key] || [])];
-      arr[idx] = { ...arr[idx], [field]: val };
-      return { ...c, [key]: arr };
-    });
-    setUnsaved(true);
-  };
-
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 3500);
   };
 
-  const handleSave = () => {
+  // ── Save to settings ──
+  const handleSave = async () => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(content));
-    } catch (err) {
-      // localStorage can throw (quota exceeded, private-mode restrictions, etc.)
-      // Surface this clearly instead of silently pretending the save worked.
-      showToast(
-        "⚠️ Save fail hui — storage full ya blocked ho sakta hai.",
-        "error",
-      );
-      console.error("Failed to save landing content:", err);
-      return;
-    }
-    setUnsaved(false);
-    showToast("✓ Saari changes save ho gayi! Landing page update ho gaya.");
-    // Dispatch custom event so LandingPage in same tab can pick up changes immediately
-    window.dispatchEvent(
-      new CustomEvent("school-erp-content-updated", {
-        detail: { timestamp: Date.now() },
-      }),
-    );
-  };
-
-  const handleReset = () => {
-    if (
-      window.confirm(
-        "Sab kuch default pe reset karna chahte ho? Saari changes chali jayengi.",
-      )
-    ) {
-      setContent(DEFAULT_CONTENT);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_CONTENT));
+      await setDoc(doc(db, "settings", "landingPage"), content);
       setUnsaved(false);
-      showToast("Reset complete!", "success");
-      window.dispatchEvent(
-        new CustomEvent("school-erp-content-updated", {
-          detail: { timestamp: Date.now() },
-        }),
-      );
+      showToast("✓ Saari changes save ho gayi!");
+      window.dispatchEvent(new CustomEvent("school-erp-content-updated"));
+    } catch (err) {
+      showToast("⚠️ Save failed.", "error");
+      console.error(err);
     }
   };
 
-  // Slides CRUD
-  const addSlide = (slide) => {
-    set("slides", [...(content.slides || []), slide]);
+  const handleReset = async () => {
+    if (window.confirm("Default pe reset? Saari changes chali jayengi.")) {
+      try {
+        await setDoc(doc(db, "settings", "landingPage"), DEFAULT_CONTENT);
+        setContent(DEFAULT_CONTENT);
+        setUnsaved(false);
+        showToast("Reset complete!");
+      } catch (err) {
+        showToast("Reset failed.", "error");
+      }
+    }
+  };
+
+  // ── Hero Slides CRUD ──
+  const addSlide = (s) => {
+    set("heroSlides", [...(content.heroSlides || []), s]);
     setModal(null);
   };
-  const updateSlide = (idx, slide) => {
-    const arr = [...content.slides];
-    arr[idx] = slide;
-    set("slides", arr);
+  const updateSlide = (idx, s) => {
+    const a = [...content.heroSlides];
+    a[idx] = s;
+    set("heroSlides", a);
     setModal(null);
   };
   const deleteSlide = (idx) => {
-    if (window.confirm("Ye slide delete karna chahte ho?"))
+    if (window.confirm("Delete?"))
       set(
-        "slides",
-        content.slides.filter((_, i) => i !== idx),
+        "heroSlides",
+        content.heroSlides.filter((_, i) => i !== idx),
       );
   };
 
-  // Gallery CRUD
-  const addGallery = (item) => {
-    set("gallery", [...(content.gallery || []), item]);
-    setModal(null);
-  };
-  const updateGallery = (idx, item) => {
-    const arr = [...content.gallery];
-    arr[idx] = item;
-    set("gallery", arr);
-    setModal(null);
-  };
-  const deleteGallery = (idx) => {
-    if (window.confirm("Ye photo delete karna chahte ho?"))
-      set(
-        "gallery",
-        content.gallery.filter((_, i) => i !== idx),
-      );
-  };
-
-  // Notices CRUD
+  // ── Notices CRUD ──
   const addNotice = (n) => {
     set("notices", [n, ...(content.notices || [])]);
     setModal(null);
   };
   const updateNotice = (idx, n) => {
-    const arr = [...content.notices];
-    arr[idx] = n;
-    set("notices", arr);
+    const a = [...content.notices];
+    a[idx] = n;
+    set("notices", a);
     setModal(null);
   };
   const deleteNotice = (idx) => {
-    if (window.confirm("Ye notice delete karna chahte ho?"))
+    if (window.confirm("Delete?"))
       set(
         "notices",
         content.notices.filter((_, i) => i !== idx),
       );
   };
 
+  // ── Why Cards CRUD ──
+  const updateWhyCard = (idx, field, val) => {
+    const a = [...content.whyCards];
+    a[idx] = { ...a[idx], [field]: val };
+    set("whyCards", a);
+  };
+  const addWhyCard = () =>
+    set("whyCards", [
+      ...(content.whyCards || []),
+      { icon: "⭐", title: "Naya Feature", desc: "Description yahan likhein." },
+    ]);
+
+  // ── Announcements CRUD ──
+  const [newAnnouncement, setNewAnnouncement] = useState("");
+  const addAnnouncement = () => {
+    if (newAnnouncement.trim()) {
+      set("announcements", [
+        ...(content.announcements || []),
+        newAnnouncement.trim(),
+      ]);
+      setNewAnnouncement("");
+    }
+  };
+  const deleteAnnouncement = (idx) => {
+    if (window.confirm("Delete?"))
+      set(
+        "announcements",
+        content.announcements.filter((_, i) => i !== idx),
+      );
+  };
+
+  // ── Classes CRUD ──
+  const updateClass = (idx, field, val) => {
+    const a = [...content.classes];
+    a[idx] = { ...a[idx], [field]: val };
+    set("classes", a);
+  };
+
+  // ── About features CRUD ──
+  const [newFeature, setNewFeature] = useState("");
+  const addFeature = () => {
+    if (newFeature.trim()) {
+      set("aboutFeatures", [
+        ...(content.aboutFeatures || []),
+        newFeature.trim(),
+      ]);
+      setNewFeature("");
+    }
+  };
+  const deleteFeature = (idx) => {
+    if (window.confirm("Delete?"))
+      set(
+        "aboutFeatures",
+        content.aboutFeatures.filter((_, i) => i !== idx),
+      );
+  };
+
+  // ── Gallery Collection CRUD (separate Firestore collection) ──
+  const addGalleryPhoto = async (item) => {
+    try {
+      await addDoc(collection(db, "gallery"), {
+        ...item,
+        createdAt: new Date().toISOString(),
+      });
+      setModal(null);
+      showToast("✓ Photo add ho gayi!");
+      loadGalleryCollection();
+    } catch (err) {
+      showToast("⚠️ Failed: " + err.message, "error");
+    }
+  };
+  const deleteGalleryPhoto = async (id) => {
+    if (window.confirm("Delete this photo?")) {
+      try {
+        await deleteDoc(doc(db, "gallery", id));
+        showToast("✓ Photo delete ho gayi!");
+        loadGalleryCollection();
+      } catch (err) {
+        showToast("⚠️ Failed: " + err.message, "error");
+      }
+    }
+  };
+
+  // ── Filter gallery collection ──
+  const galEventNames = [
+    ...new Set(galleryCollection.map((p) => p.eventName).filter(Boolean)),
+  ];
+  const galFiltered =
+    galFilter === "All"
+      ? galleryCollection
+      : galleryCollection.filter((p) => p.eventName === galFilter);
+
+  // ── Nav items ──
   const NAV = [
     { id: "overview", label: "Overview", icon: ICONS.layout, color: "#3b82f6" },
-    { id: "hero", label: "Hero Section", icon: ICONS.image, color: "#8b5cf6" },
+    { id: "hero", label: "Hero Slider", icon: ICONS.move, color: "#8b5cf6" },
     {
-      id: "stats",
-      label: "Stats / Counters",
-      icon: ICONS.stats,
-      color: "#10b981",
+      id: "announcements",
+      label: "Announcements",
+      icon: ICONS.speaker,
+      color: "#f59e0b",
     },
-    { id: "slides", label: "Image Slider", icon: ICONS.move, color: "#f59e0b" },
-    { id: "gallery", label: "Gallery", icon: ICONS.grid, color: "#ec4899" },
+    { id: "stats", label: "Stats", icon: ICONS.stats, color: "#10b981" },
+    { id: "about", label: "About Section", icon: ICONS.info, color: "#6366f1" },
+    {
+      id: "leadership",
+      label: "Leadership",
+      icon: ICONS.users,
+      color: "#ec4899",
+    },
+    { id: "why", label: "Why Choose Us", icon: ICONS.check, color: "#14b8a6" },
+    { id: "classes", label: "Our Classes", icon: ICONS.book, color: "#f97316" },
     {
       id: "notices",
       label: "Notice Board",
@@ -1105,31 +1223,36 @@ export const WebAdminDashboard = () => {
       color: "#ef4444",
     },
     {
-      id: "principal",
-      label: "Principal / About",
-      icon: ICONS.users,
-      color: "#6366f1",
+      id: "gallery",
+      label: "📸 Gallery Photos",
+      icon: ICONS.grid,
+      color: "#d93025",
     },
-    { id: "why", label: "Why Choose Us", icon: ICONS.check, color: "#14b8a6" },
     {
       id: "contact",
       label: "Contact / Footer",
       icon: ICONS.phone,
-      color: "#f97316",
+      color: "#2563eb",
     },
   ];
 
   const SECTION_LABELS = {
     overview: "Overview",
-    hero: "Hero Section",
+    hero: "Hero Slider",
+    announcements: "Announcements",
     stats: "Stats",
-    slides: "Image Slider",
-    gallery: "Gallery",
-    notices: "Notice Board",
-    principal: "Principal / About",
+    about: "About Section",
+    leadership: "Leadership",
     why: "Why Choose Us",
-    contact: "Contact",
+    classes: "Our Classes",
+    notices: "Notice Board",
+    gallery: "📸 Gallery Photos",
+    contact: "Contact / Footer",
   };
+
+  // ── Theme colors for Live Preview ──
+  const themePrimary = content.primaryColor || "#0f1b3d";
+  const themeAccent = content.accentColor || "#c9a84c";
 
   return (
     <>
@@ -1144,12 +1267,12 @@ export const WebAdminDashboard = () => {
               </div>
               <div>
                 <div className="wad-logo-name">Web Admin</div>
-                <div className="wad-logo-sub">Landing Page Control</div>
+                <div className="wad-logo-sub">Full Control Panel</div>
               </div>
             </div>
           </div>
           <nav className="wad-nav">
-            <div className="wad-nav-section">Sections</div>
+            <div className="wad-nav-section">Manage Sections</div>
             {NAV.map((n) => (
               <button
                 key={n.id}
@@ -1163,9 +1286,6 @@ export const WebAdminDashboard = () => {
                   <Icon d={n.icon} size={14} />
                 </div>
                 {n.label}
-                {unsaved && section === n.id && (
-                  <span className="wad-unsaved-dot" />
-                )}
               </button>
             ))}
           </nav>
@@ -1182,9 +1302,8 @@ export const WebAdminDashboard = () => {
           </div>
         </aside>
 
-        {/* ── Main ── */}
+        {/* ── Main Content ── */}
         <div className="wad-main">
-          {/* Topbar */}
           <div className="wad-topbar">
             <div className="wad-topbar-left">
               <div>
@@ -1192,14 +1311,15 @@ export const WebAdminDashboard = () => {
                   {SECTION_LABELS[section]}
                 </div>
                 <div className="wad-breadcrumb">
-                  <span>P.S. Academy</span>
+                  <span>P.S. Academy</span>{" "}
                   <span style={{ color: "var(--line)" }}>›</span>
                   <span style={{ color: "var(--blue)" }}>
                     {SECTION_LABELS[section]}
                   </span>
                   {unsaved && (
                     <span style={{ color: "var(--amber)", fontWeight: 600 }}>
-                      • Unsaved changes
+                      {" "}
+                      • Unsaved
                     </span>
                   )}
                 </div>
@@ -1216,14 +1336,14 @@ export const WebAdminDashboard = () => {
           </div>
 
           <div className="wad-content">
-            {/* ── OVERVIEW ── */}
+            {/* ═══ OVERVIEW ═══ */}
             {section === "overview" && (
               <div>
                 <div style={{ marginBottom: 20 }}>
                   <h2
                     style={{ fontSize: 18, fontWeight: 700, marginBottom: 4 }}
                   >
-                    Landing Page ka poora control yahan hai 👋
+                    Landing Page — Full Control 👋
                   </h2>
                   <p
                     style={{
@@ -1232,9 +1352,8 @@ export const WebAdminDashboard = () => {
                       lineHeight: 1.6,
                     }}
                   >
-                    Kisi bhi section pe click karo — hero image, slider,
-                    gallery, notices sab edit kar sakte ho. Save karne ke baad
-                    live site turant update ho jaata hai.
+                    PS Academy ke landing page ka har section yahan edit kar
+                    sakte ho. Changes real-time site pe dikhte hain.
                   </p>
                 </div>
                 <div className="wad-overview-grid">
@@ -1265,7 +1384,7 @@ export const WebAdminDashboard = () => {
                       <div className="ct-icon">
                         <Icon d={ICONS.check} size={13} />
                       </div>
-                      Abhi kya save hua hai
+                      Content Summary
                     </div>
                   </div>
                   <div className="wad-card-body">
@@ -1273,17 +1392,17 @@ export const WebAdminDashboard = () => {
                       style={{
                         display: "flex",
                         flexWrap: "wrap",
-                        gap: 8,
+                        gap: 12,
                         fontSize: 12,
                         color: "var(--ink2)",
                       }}
                     >
                       <span>
-                        🖼️ <b>{(content.slides || []).length}</b> slides
+                        🖼️ <b>{(content.heroSlides || []).length}</b> hero
+                        slides
                       </span>
                       <span>
-                        📷 <b>{(content.gallery || []).length}</b> gallery
-                        photos
+                        📷 <b>{galleryCollection.length}</b> gallery photos
                       </span>
                       <span>
                         📋 <b>{(content.notices || []).length}</b> notices
@@ -1294,101 +1413,153 @@ export const WebAdminDashboard = () => {
                       <span>
                         👨‍🎓 Students: <b>{content.statsStudents}+</b>
                       </span>
+                      <span>
+                        📢 <b>{(content.announcements || []).length}</b>{" "}
+                        announcements
+                      </span>
+                      <span>
+                        🏫 <b>{(content.classes || []).length}</b> class
+                        sections
+                      </span>
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ── HERO ── */}
+            {/* ═══ HERO SLIDER ═══ */}
             {section === "hero" && (
-              <div>
-                <div className="wad-card">
-                  <div className="wad-card-header">
-                    <div className="wad-card-title">
-                      <div className="ct-icon">
-                        <Icon d={ICONS.image} size={13} />
-                      </div>
-                      Hero Main Image
+              <div className="wad-card">
+                <div className="wad-card-header">
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.move} size={13} />
                     </div>
+                    Hero Slider Slides
                   </div>
-                  <div className="wad-card-body">
-                    <ImagePicker
-                      label="Hero Image (Right side ka photo)"
-                      value={content.heroImageUrl}
-                      onChange={(v) => set("heroImageUrl", v)}
-                      tall
-                    />
-                  </div>
+                  <button
+                    className="wad-btn primary sm"
+                    onClick={() => setModal({ type: "slide" })}
+                  >
+                    <Icon d={ICONS.plus} size={12} /> Naya Slide
+                  </button>
                 </div>
-
-                <div className="wad-card">
-                  <div className="wad-card-header">
-                    <div className="wad-card-title">
-                      <div className="ct-icon">
-                        <Icon d={ICONS.edit} size={13} />
+                <div className="wad-card-body">
+                  <div className="wad-slide-strip">
+                    {(content.heroSlides || []).map((slide, idx) => (
+                      <div key={idx} className="wad-slide-thumb">
+                        <img
+                          src={slide.image}
+                          alt={slide.title}
+                          onError={(e) =>
+                            (e.target.src =
+                              "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop")
+                          }
+                        />
+                        <div className="st-caption">
+                          {slide.title || `Slide ${idx + 1}`}
+                        </div>
+                        <button
+                          className="st-del"
+                          onClick={() => deleteSlide(idx)}
+                        >
+                          <Icon d={ICONS.x} size={11} />
+                        </button>
+                        <div
+                          style={{
+                            position: "absolute",
+                            top: 5,
+                            left: 5,
+                            background: "rgba(0,0,0,.55)",
+                            color: "#fff",
+                            borderRadius: 5,
+                            padding: "2px 6px",
+                            fontSize: 10,
+                            cursor: "pointer",
+                          }}
+                          onClick={() =>
+                            setModal({ type: "slide", data: slide, index: idx })
+                          }
+                        >
+                          ✏️
+                        </div>
                       </div>
-                      Hero Text Content
+                    ))}
+                    <div
+                      className="wad-slide-add"
+                      onClick={() => setModal({ type: "slide" })}
+                    >
+                      <Icon d={ICONS.plus} size={20} />
+                      <span>Naya Slide</span>
                     </div>
                   </div>
-                  <div className="wad-card-body">
-                    <div className="wad-field">
-                      <label className="wad-label">Admission Badge Text</label>
-                      <input
-                        className="wad-input"
-                        value={content.heroBadge}
-                        onChange={(e) => set("heroBadge", e.target.value)}
-                        placeholder="Admissions Open 2025–26"
-                      />
-                    </div>
-                    <div className="wad-field">
-                      <label className="wad-label">
-                        Hero Headline (Main Title)
-                      </label>
-                      <textarea
-                        className="wad-textarea"
-                        rows={2}
-                        value={content.heroTitle}
-                        onChange={(e) => set("heroTitle", e.target.value)}
-                      />
-                    </div>
-                    <div className="wad-field">
-                      <label className="wad-label">
-                        Hero Subtitle (Description)
-                      </label>
-                      <textarea
-                        className="wad-textarea"
-                        rows={3}
-                        value={content.heroSubtitle}
-                        onChange={(e) => set("heroSubtitle", e.target.value)}
-                      />
-                    </div>
-                    <div className="wad-grid-2">
-                      <div className="wad-field">
-                        <label className="wad-label">Primary Button Text</label>
-                        <input
-                          className="wad-input"
-                          value={content.ctaText}
-                          onChange={(e) => set("ctaText", e.target.value)}
-                        />
-                      </div>
-                      <div className="wad-field">
-                        <label className="wad-label">
-                          Secondary Button Text
-                        </label>
-                        <input
-                          className="wad-input"
-                          value={content.ctaSecondary}
-                          onChange={(e) => set("ctaSecondary", e.target.value)}
-                        />
-                      </div>
-                    </div>
+                  <div
+                    style={{
+                      marginTop: 12,
+                      fontSize: 12,
+                      color: "var(--ink3)",
+                    }}
+                  >
+                    💡 Hero slider auto-play karta hai 5 seconds mein. Har slide
+                    mein image, title, subtitle aur badge hota hai.
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ── STATS ── */}
+            {/* ═══ ANNOUNCEMENTS ═══ */}
+            {section === "announcements" && (
+              <div className="wad-card">
+                <div className="wad-card-header">
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.speaker} size={13} />
+                    </div>
+                    Announcement Ticker
+                  </div>
+                </div>
+                <div className="wad-card-body">
+                  <p
+                    style={{
+                      fontSize: 12,
+                      color: "var(--ink3)",
+                      marginBottom: 12,
+                    }}
+                  >
+                    Ye announcements home page pe scrolling ticker mein dikhte
+                    hain.
+                  </p>
+                  {(content.announcements || []).map((a, idx) => (
+                    <div key={idx} className="announce-item">
+                      <span className="ai-text">{a}</span>
+                      <button
+                        className="wad-btn danger sm icon-only"
+                        onClick={() => deleteAnnouncement(idx)}
+                      >
+                        <Icon d={ICONS.trash} size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <input
+                      className="wad-input"
+                      placeholder="Naya announcement likhein..."
+                      value={newAnnouncement}
+                      onChange={(e) => setNewAnnouncement(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && addAnnouncement()}
+                    />
+                    <button
+                      className="wad-btn primary"
+                      onClick={addAnnouncement}
+                    >
+                      <Icon d={ICONS.plus} size={13} /> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ STATS ═══ */}
             {section === "stats" && (
               <div className="wad-card">
                 <div className="wad-card-header">
@@ -1396,35 +1567,16 @@ export const WebAdminDashboard = () => {
                     <div className="ct-icon">
                       <Icon d={ICONS.stats} size={13} />
                     </div>
-                    Hero Stats / Counter Numbers
+                    Stats Counters
                   </div>
-                  <span style={{ fontSize: 11, color: "var(--ink3)" }}>
-                    Hero section mein dikhte hain
-                  </span>
                 </div>
                 <div className="wad-card-body">
                   <div className="wad-grid-4">
                     {[
-                      {
-                        key: "statsStudents",
-                        label: "Students Enrolled",
-                        suffix: "+",
-                      },
-                      {
-                        key: "statsFaculty",
-                        label: "Expert Faculty",
-                        suffix: "+",
-                      },
-                      {
-                        key: "statsPassRate",
-                        label: "Board Pass Rate",
-                        suffix: "%",
-                      },
-                      {
-                        key: "statsYears",
-                        label: "Years of Legacy",
-                        suffix: "+",
-                      },
+                      { key: "statsStudents", label: "Students", suffix: "+" },
+                      { key: "statsFaculty", label: "Faculty", suffix: "+" },
+                      { key: "statsPassRate", label: "Pass Rate", suffix: "%" },
+                      { key: "statsYears", label: "Years Legacy", suffix: "+" },
                     ].map((s) => (
                       <div key={s.key} className="wad-stat-card">
                         <div className="sc-label">{s.label}</div>
@@ -1449,7 +1601,7 @@ export const WebAdminDashboard = () => {
                             marginTop: 4,
                           }}
                         >
-                          Site pe dikhega:{" "}
+                          Displays:{" "}
                           <b>
                             {content[s.key]}
                             {s.suffix}
@@ -1458,194 +1610,319 @@ export const WebAdminDashboard = () => {
                       </div>
                     ))}
                   </div>
-                  <div
-                    style={{
-                      marginTop: 16,
-                      padding: 12,
-                      background: "var(--surface)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                      color: "var(--ink3)",
-                    }}
-                  >
-                    💡 Ye numbers hero section ke niche scroll karke stats mein
-                    dikhte hain.
-                  </div>
                 </div>
               </div>
             )}
 
-            {/* ── SLIDES ── */}
-            {section === "slides" && (
-              <div className="wad-card">
-                <div className="wad-card-header">
-                  <div className="wad-card-title">
-                    <div className="ct-icon">
-                      <Icon d={ICONS.move} size={13} />
+            {/* ═══ ABOUT ═══ */}
+            {section === "about" && (
+              <div>
+                <div className="wad-card">
+                  <div className="wad-card-header">
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.info} size={13} />
+                      </div>
+                      About Section
                     </div>
-                    Image Slider (Home page)
                   </div>
-                  <button
-                    className="wad-btn primary sm"
-                    onClick={() => setModal({ type: "slide" })}
-                  >
-                    <Icon d={ICONS.plus} size={12} /> Slide Jodo
-                  </button>
-                </div>
-                <div className="wad-card-body">
-                  <div className="wad-slide-strip">
-                    {(content.slides || []).map((slide, idx) => (
-                      <div key={idx} className="wad-slide-thumb">
-                        <img
-                          src={slide.src}
-                          alt={slide.caption}
-                          onError={(e) =>
-                            (e.target.src =
-                              "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop")
-                          }
-                        />
-                        <div className="st-caption">
-                          {slide.caption || `Slide ${idx + 1}`}
-                        </div>
-                        <button
-                          className="st-del"
-                          onClick={() => deleteSlide(idx)}
-                        >
-                          <Icon d={ICONS.x} size={11} />
-                        </button>
+                  <div className="wad-card-body">
+                    <div className="wad-field">
+                      <label className="wad-label">Title</label>
+                      <input
+                        className="wad-input"
+                        value={content.aboutTitle}
+                        onChange={(e) => set("aboutTitle", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Description</label>
+                      <textarea
+                        className="wad-textarea"
+                        rows={4}
+                        value={content.aboutDesc}
+                        onChange={(e) => set("aboutDesc", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Mission Statement</label>
+                      <input
+                        className="wad-input"
+                        value={content.aboutMission}
+                        onChange={(e) => set("aboutMission", e.target.value)}
+                      />
+                    </div>
+                    <ImagePicker
+                      label="About Image"
+                      value={content.aboutImage}
+                      onChange={(v) => set("aboutImage", v)}
+                      tall
+                    />
+                    <div className="wad-field">
+                      <label className="wad-label">Features (Checklist)</label>
+                      {(content.aboutFeatures || []).map((f, idx) => (
                         <div
-                          style={{
-                            position: "absolute",
-                            top: 5,
-                            left: 5,
-                            background: "rgba(0,0,0,.55)",
-                            color: "#fff",
-                            borderRadius: 5,
-                            padding: "2px 6px",
-                            fontSize: 10,
-                            cursor: "pointer",
-                          }}
-                          onClick={() =>
-                            setModal({ type: "slide", data: slide, index: idx })
-                          }
+                          key={idx}
+                          style={{ display: "flex", gap: 8, marginBottom: 6 }}
                         >
-                          ✏️ Edit
+                          <input
+                            className="wad-input"
+                            value={f}
+                            onChange={(e) => {
+                              const a = [...content.aboutFeatures];
+                              a[idx] = e.target.value;
+                              set("aboutFeatures", a);
+                            }}
+                          />
+                          <button
+                            className="wad-btn danger sm icon-only"
+                            onClick={() => deleteFeature(idx)}
+                          >
+                            <Icon d={ICONS.trash} size={12} />
+                          </button>
                         </div>
+                      ))}
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <input
+                          className="wad-input"
+                          placeholder="Naya feature..."
+                          value={newFeature}
+                          onChange={(e) => setNewFeature(e.target.value)}
+                          onKeyDown={(e) => e.key === "Enter" && addFeature()}
+                        />
+                        <button
+                          className="wad-btn primary"
+                          onClick={addFeature}
+                        >
+                          <Icon d={ICONS.plus} size={13} /> Add
+                        </button>
                       </div>
-                    ))}
-                    <div
-                      className="wad-slide-add"
-                      onClick={() => setModal({ type: "slide" })}
-                    >
-                      <Icon d={ICONS.plus} size={20} />
-                      <span>Naya Slide</span>
                     </div>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 12,
-                      fontSize: 12,
-                      color: "var(--ink3)",
-                    }}
-                  >
-                    💡 Slides home page pe hero ke niche auto-play hote hain.
-                    Edit ya delete karne ke liye slide pe hover karo.
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ── GALLERY ── */}
-            {section === "gallery" && (
+            {/* ═══ LEADERSHIP ═══ */}
+            {section === "leadership" && (
+              <div>
+                <div className="wad-card">
+                  <div className="wad-card-header">
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.users} size={13} />
+                      </div>
+                      Principal
+                    </div>
+                  </div>
+                  <div className="wad-card-body">
+                    <div className="wad-field">
+                      <label className="wad-label">Name</label>
+                      <input
+                        className="wad-input"
+                        value={content.principalName}
+                        onChange={(e) => set("principalName", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Role</label>
+                      <input
+                        className="wad-input"
+                        value={content.principalRole}
+                        onChange={(e) => set("principalRole", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Quote</label>
+                      <textarea
+                        className="wad-textarea"
+                        rows={3}
+                        value={content.principalQuote}
+                        onChange={(e) => set("principalQuote", e.target.value)}
+                      />
+                    </div>
+                    <ImagePicker
+                      label="Photo"
+                      value={content.principalPhoto}
+                      onChange={(v) => set("principalPhoto", v)}
+                    />
+                  </div>
+                </div>
+                <div className="wad-card">
+                  <div className="wad-card-header">
+                    <div className="wad-card-title">
+                      <div className="ct-icon">
+                        <Icon d={ICONS.users} size={13} />
+                      </div>
+                      Manager / Chairman
+                    </div>
+                  </div>
+                  <div className="wad-card-body">
+                    <div className="wad-field">
+                      <label className="wad-label">Name</label>
+                      <input
+                        className="wad-input"
+                        value={content.managerName}
+                        onChange={(e) => set("managerName", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Role</label>
+                      <input
+                        className="wad-input"
+                        value={content.managerRole}
+                        onChange={(e) => set("managerRole", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Quote</label>
+                      <textarea
+                        className="wad-textarea"
+                        rows={3}
+                        value={content.managerQuote}
+                        onChange={(e) => set("managerQuote", e.target.value)}
+                      />
+                    </div>
+                    <ImagePicker
+                      label="Photo"
+                      value={content.managerPhoto}
+                      onChange={(v) => set("managerPhoto", v)}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ═══ WHY CHOOSE US ═══ */}
+            {section === "why" && (
               <div className="wad-card">
                 <div className="wad-card-header">
                   <div className="wad-card-title">
                     <div className="ct-icon">
-                      <Icon d={ICONS.grid} size={13} />
+                      <Icon d={ICONS.check} size={13} />
                     </div>
-                    School Gallery Photos
+                    Why Choose Us — Cards
                   </div>
-                  <button
-                    className="wad-btn primary sm"
-                    onClick={() => setModal({ type: "gallery" })}
-                  >
-                    <Icon d={ICONS.plus} size={12} /> Photo Jodo
-                  </button>
                 </div>
                 <div className="wad-card-body">
-                  <div className="wad-gal-grid">
-                    {(content.gallery || []).map((item, idx) => (
-                      <div key={idx} className="wad-gal-item">
-                        <img
-                          src={item.src}
-                          alt={item.caption}
-                          onError={(e) =>
-                            (e.target.src =
-                              "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=400&auto=format&fit=crop")
+                  {(content.whyCards || []).map((card, idx) => (
+                    <div key={idx} className="wad-why-item">
+                      <div className="wad-why-icon-picker">{card.icon}</div>
+                      <div className="wad-why-fields">
+                        <div className="wad-grid-2" style={{ marginBottom: 0 }}>
+                          <input
+                            className="wad-input"
+                            placeholder="Icon (emoji)"
+                            value={card.icon}
+                            onChange={(e) =>
+                              updateWhyCard(idx, "icon", e.target.value)
+                            }
+                          />
+                          <input
+                            className="wad-input"
+                            placeholder="Title"
+                            value={card.title}
+                            onChange={(e) =>
+                              updateWhyCard(idx, "title", e.target.value)
+                            }
+                          />
+                        </div>
+                        <textarea
+                          className="wad-textarea"
+                          rows={2}
+                          placeholder="Description..."
+                          value={card.desc}
+                          onChange={(e) =>
+                            updateWhyCard(idx, "desc", e.target.value)
                           }
                         />
-                        <div className="wad-gal-overlay">
-                          <button
-                            className="wad-btn sm"
-                            style={{ background: "#fff", color: "var(--ink)" }}
-                            onClick={() =>
-                              setModal({
-                                type: "gallery",
-                                data: item,
-                                index: idx,
-                              })
-                            }
-                          >
-                            <Icon d={ICONS.edit} size={12} /> Edit
-                          </button>
-                          <button
-                            className="wad-btn sm danger"
-                            onClick={() => deleteGallery(idx)}
-                          >
-                            <Icon d={ICONS.trash} size={12} /> Delete
-                          </button>
-                        </div>
-                        {item.caption && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              background: "rgba(0,0,0,.6)",
-                              color: "#fff",
-                              fontSize: 10,
-                              padding: "4px 7px",
-                            }}
-                          >
-                            {item.caption}
-                          </div>
-                        )}
                       </div>
-                    ))}
-                    <div
-                      className="wad-gal-add"
-                      onClick={() => setModal({ type: "gallery" })}
-                    >
-                      <Icon d={ICONS.plus} size={22} />
-                      <span>Photo Jodo</span>
                     </div>
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 12,
-                      fontSize: 12,
-                      color: "var(--ink3)",
-                    }}
-                  >
-                    💡 Gallery mein pehla photo (index 0) bada dikhta hai. Photo
-                    pe hover karo edit/delete karne ke liye.
-                  </div>
+                  ))}
+                  <button className="wad-add-row" onClick={addWhyCard}>
+                    <Icon d={ICONS.plus} size={15} /> Naya Card
+                  </button>
                 </div>
               </div>
             )}
 
-            {/* ── NOTICES ── */}
+            {/* ═══ CLASSES ═══ */}
+            {section === "classes" && (
+              <div className="wad-card">
+                <div className="wad-card-header">
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.book} size={13} />
+                    </div>
+                    Academic Sections (3 vertical cards)
+                  </div>
+                </div>
+                <div className="wad-card-body">
+                  {(content.classes || []).map((cls, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        background: "var(--surface)",
+                        border: "1px solid var(--line)",
+                        borderRadius: 8,
+                        padding: 14,
+                        marginBottom: 12,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontWeight: 600,
+                          fontSize: 13,
+                          marginBottom: 10,
+                        }}
+                      >
+                        Card {idx + 1}: {cls.tag}
+                      </div>
+                      <div className="wad-grid-3">
+                        <div className="wad-field">
+                          <label className="wad-label">Tag</label>
+                          <input
+                            className="wad-input"
+                            value={cls.tag}
+                            onChange={(e) =>
+                              updateClass(idx, "tag", e.target.value)
+                            }
+                          />
+                        </div>
+                        <div className="wad-field">
+                          <label className="wad-label">Title</label>
+                          <input
+                            className="wad-input"
+                            value={cls.title}
+                            onChange={(e) =>
+                              updateClass(idx, "title", e.target.value)
+                            }
+                          />
+                        </div>
+                      </div>
+                      <div className="wad-field">
+                        <label className="wad-label">Description</label>
+                        <textarea
+                          className="wad-textarea"
+                          rows={2}
+                          value={cls.desc}
+                          onChange={(e) =>
+                            updateClass(idx, "desc", e.target.value)
+                          }
+                        />
+                      </div>
+                      <ImagePicker
+                        label="Background Image"
+                        value={cls.image}
+                        onChange={(v) => updateClass(idx, "image", v)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ═══ NOTICES ═══ */}
             {section === "notices" && (
               <div className="wad-card">
                 <div className="wad-card-header">
@@ -1716,7 +1993,7 @@ export const WebAdminDashboard = () => {
                                 })
                               }
                             >
-                              <Icon d={ICONS.edit} size={12} /> Edit
+                              <Icon d={ICONS.edit} size={12} />
                             </button>
                             <button
                               className="wad-btn sm danger icon-only"
@@ -1726,13 +2003,7 @@ export const WebAdminDashboard = () => {
                             </button>
                           </div>
                         </div>
-                        <div
-                          style={{
-                            fontSize: 12.5,
-                            color: "var(--ink3)",
-                            lineHeight: 1.6,
-                          }}
-                        >
+                        <div style={{ fontSize: 12.5, color: "var(--ink3)" }}>
                           {n.desc}
                         </div>
                       </div>
@@ -1741,237 +2012,244 @@ export const WebAdminDashboard = () => {
                       className="wad-add-row"
                       onClick={() => setModal({ type: "notice" })}
                     >
-                      <Icon d={ICONS.plus} size={15} /> Naya Notice Jodo
+                      <Icon d={ICONS.plus} size={15} /> Naya Notice
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* ── PRINCIPAL / ABOUT ── */}
-            {section === "principal" && (
-              <div>
-                <div className="wad-card">
-                  <div className="wad-card-header">
-                    <div className="wad-card-title">
-                      <div className="ct-icon">
-                        <Icon d={ICONS.users} size={13} />
-                      </div>
-                      Principal ka Short Quote (Home page)
-                    </div>
-                  </div>
-                  <div className="wad-card-body">
-                    <div className="wad-field">
-                      <label className="wad-label">Principal ka Naam</label>
-                      <input
-                        className="wad-input"
-                        value={content.principalName}
-                        onChange={(e) => set("principalName", e.target.value)}
-                      />
-                    </div>
-                    <div className="wad-field">
-                      <label className="wad-label">
-                        Short Quote (Home page strip mein dikhta hai)
-                      </label>
-                      <textarea
-                        className="wad-textarea"
-                        rows={3}
-                        value={content.principalQuoteShort}
-                        onChange={(e) =>
-                          set("principalQuoteShort", e.target.value)
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="wad-card">
-                  <div className="wad-card-header">
-                    <div className="wad-card-title">
-                      <div className="ct-icon">
-                        <Icon d={ICONS.edit} size={13} />
-                      </div>
-                      Principal ka Full Message (About page)
-                    </div>
-                  </div>
-                  <div className="wad-card-body">
-                    <div className="wad-field">
-                      <label className="wad-label">Full Message</label>
-                      <textarea
-                        className="wad-textarea"
-                        rows={6}
-                        value={content.principalFull}
-                        onChange={(e) => set("principalFull", e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className="wad-card">
-                  <div className="wad-card-header">
-                    <div className="wad-card-title">
-                      <div className="ct-icon">
-                        <Icon d={ICONS.users} size={13} />
-                      </div>
-                      Manager ka Message
-                    </div>
-                  </div>
-                  <div className="wad-card-body">
-                    <div className="wad-field">
-                      <label className="wad-label">Manager ka Naam</label>
-                      <input
-                        className="wad-input"
-                        value={content.managerName}
-                        onChange={(e) => set("managerName", e.target.value)}
-                      />
-                    </div>
-                    <div className="wad-field">
-                      <label className="wad-label">Manager ka Message</label>
-                      <textarea
-                        className="wad-textarea"
-                        rows={4}
-                        value={content.managerFull}
-                        onChange={(e) => set("managerFull", e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* ── WHY CHOOSE US ── */}
-            {section === "why" && (
+            {/* ═══ GALLERY ═══ */}
+            {section === "gallery" && (
               <div className="wad-card">
                 <div className="wad-card-header">
                   <div className="wad-card-title">
                     <div className="ct-icon">
-                      <Icon d={ICONS.check} size={13} />
+                      <Icon d={ICONS.grid} size={13} />
                     </div>
-                    Why Choose Us — Cards
+                    Gallery Photos (Firestore Collection)
                   </div>
+                  <button
+                    className="wad-btn primary sm"
+                    onClick={() => setModal({ type: "galleryCollection" })}
+                  >
+                    <Icon d={ICONS.plus} size={12} /> Naya Photo
+                  </button>
                 </div>
                 <div className="wad-card-body">
-                  {(content.whyCards || []).map((card, idx) => (
-                    <div key={idx} className="wad-why-item">
-                      <div className="wad-why-icon-picker" title="Emoji icon">
-                        {card.icon}
-                      </div>
-                      <div className="wad-why-fields">
-                        <div className="wad-grid-2" style={{ marginBottom: 0 }}>
-                          <input
-                            className="wad-input"
-                            placeholder="Emoji icon (e.g. 🏆)"
-                            value={card.icon}
-                            onChange={(e) => {
-                              const a = [...content.whyCards];
-                              a[idx] = { ...a[idx], icon: e.target.value };
-                              set("whyCards", a);
-                            }}
-                          />
-                          <input
-                            className="wad-input"
-                            placeholder="Card Title"
-                            value={card.title}
-                            onChange={(e) => {
-                              const a = [...content.whyCards];
-                              a[idx] = { ...a[idx], title: e.target.value };
-                              set("whyCards", a);
-                            }}
-                          />
-                        </div>
-                        <textarea
-                          className="wad-textarea"
-                          rows={2}
-                          placeholder="Description..."
-                          value={card.desc}
-                          onChange={(e) => {
-                            const a = [...content.whyCards];
-                            a[idx] = { ...a[idx], desc: e.target.value };
-                            set("whyCards", a);
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                  <div style={{ marginTop: 8 }}>
-                    <button
-                      className="wad-add-row"
-                      onClick={() =>
-                        set("whyCards", [
-                          ...(content.whyCards || []),
-                          {
-                            icon: "⭐",
-                            title: "Naya Feature",
-                            desc: "Iska vivaran yahan likhein.",
-                          },
-                        ])
-                      }
+                  {/* Filters */}
+                  {galEventNames.length > 0 && (
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 6,
+                        marginBottom: 14,
+                        flexWrap: "wrap",
+                      }}
                     >
-                      <Icon d={ICONS.plus} size={15} /> Naya Card Jodo
-                    </button>
-                  </div>
+                      <button
+                        className={`filter-btn${galFilter === "All" ? " active" : ""}`}
+                        onClick={() => setGalFilter("All")}
+                        style={{
+                          padding: "6px 14px",
+                          borderRadius: 6,
+                          border: "1px solid var(--line)",
+                          background:
+                            galFilter === "All" ? "var(--blue)" : "#fff",
+                          color: galFilter === "All" ? "#fff" : "var(--ink3)",
+                          cursor: "pointer",
+                          fontSize: 12,
+                          fontWeight: 600,
+                        }}
+                      >
+                        All
+                      </button>
+                      {galEventNames.map((ev) => (
+                        <button
+                          key={ev}
+                          className={`filter-btn${galFilter === ev ? " active" : ""}`}
+                          onClick={() => setGalFilter(ev)}
+                          style={{
+                            padding: "6px 14px",
+                            borderRadius: 6,
+                            border: "1px solid var(--line)",
+                            background:
+                              galFilter === ev ? "var(--blue)" : "#fff",
+                            color: galFilter === ev ? "#fff" : "var(--ink3)",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {ev}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {galFiltered.length > 0 ? (
+                    <div className="gal-collection-grid">
+                      {galFiltered.map((photo) => (
+                        <div key={photo.id} className="gal-col-item">
+                          <img src={photo.image} alt={photo.eventName} />
+                          <div className="gal-col-overlay">
+                            <div className="gco-event">{photo.eventName}</div>
+                            {photo.eventDate && (
+                              <div className="gco-date">{photo.eventDate}</div>
+                            )}
+                            <button
+                              className="wad-btn sm danger"
+                              onClick={() => deleteGalleryPhoto(photo.id)}
+                            >
+                              <Icon d={ICONS.trash} size={12} /> Delete
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        textAlign: "center",
+                        padding: "40px 20px",
+                        color: "var(--ink3)",
+                      }}
+                    >
+                      <p style={{ fontSize: "2rem", marginBottom: 8 }}>📸</p>
+                      <p>
+                        Koi photo nahi hai. "Naya Photo" button se add karein.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
 
-            {/* ── CONTACT ── */}
+            {/* ═══ CONTACT / FOOTER ═══ */}
             {section === "contact" && (
-              <div>
-                <div className="wad-card">
-                  <div className="wad-card-header">
-                    <div className="wad-card-title">
-                      <div className="ct-icon">
-                        <Icon d={ICONS.phone} size={13} />
-                      </div>
-                      Contact Details (Footer + Contact page)
+              <div className="wad-card">
+                <div className="wad-card-header">
+                  <div className="wad-card-title">
+                    <div className="ct-icon">
+                      <Icon d={ICONS.phone} size={13} />
                     </div>
+                    Contact & Footer
                   </div>
-                  <div className="wad-card-body">
+                </div>
+                <div className="wad-card-body">
+                  <div className="wad-field">
+                    <label className="wad-label">School Name</label>
+                    <input
+                      className="wad-input"
+                      value={content.schoolName}
+                      onChange={(e) => set("schoolName", e.target.value)}
+                    />
+                  </div>
+                  <div className="wad-field">
+                    <label className="wad-label">Tagline</label>
+                    <input
+                      className="wad-input"
+                      value={content.schoolTagline}
+                      onChange={(e) => set("schoolTagline", e.target.value)}
+                    />
+                  </div>
+                  <div className="wad-field">
+                    <label className="wad-label">Affiliation Text</label>
+                    <input
+                      className="wad-input"
+                      value={content.affiliationText}
+                      onChange={(e) => set("affiliationText", e.target.value)}
+                    />
+                  </div>
+                  <div className="wad-grid-2">
                     <div className="wad-field">
-                      <label className="wad-label">Poora Pata (Address)</label>
-                      <textarea
-                        className="wad-textarea"
-                        rows={2}
-                        value={content.contactAddress}
-                        onChange={(e) => set("contactAddress", e.target.value)}
+                      <label className="wad-label">Phone</label>
+                      <input
+                        className="wad-input"
+                        value={content.topPhone}
+                        onChange={(e) => set("topPhone", e.target.value)}
                       />
                     </div>
-                    <div className="wad-grid-2">
-                      <div className="wad-field">
-                        <label className="wad-label">Main Phone Number</label>
-                        <input
-                          className="wad-input"
-                          value={content.contactPhone}
-                          onChange={(e) => set("contactPhone", e.target.value)}
-                        />
-                      </div>
-                      <div className="wad-field">
-                        <label className="wad-label">
-                          Admission Enquiry Number
-                        </label>
-                        <input
-                          className="wad-input"
-                          value={content.contactPhoneAdmission}
-                          onChange={(e) =>
-                            set("contactPhoneAdmission", e.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="wad-field">
-                        <label className="wad-label">Email Address</label>
-                        <input
-                          className="wad-input"
-                          type="email"
-                          value={content.contactEmail}
-                          onChange={(e) => set("contactEmail", e.target.value)}
-                        />
-                      </div>
-                      <div className="wad-field">
-                        <label className="wad-label">Office Hours</label>
-                        <input
-                          className="wad-input"
-                          value={content.contactHours}
-                          onChange={(e) => set("contactHours", e.target.value)}
-                        />
-                      </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Email</label>
+                      <input
+                        className="wad-input"
+                        value={content.topEmail}
+                        onChange={(e) => set("topEmail", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Contact Phone</label>
+                      <input
+                        className="wad-input"
+                        value={content.contactPhone}
+                        onChange={(e) => set("contactPhone", e.target.value)}
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Contact Email</label>
+                      <input
+                        className="wad-input"
+                        value={content.contactEmail}
+                        onChange={(e) => set("contactEmail", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="wad-field">
+                    <label className="wad-label">Address</label>
+                    <textarea
+                      className="wad-textarea"
+                      rows={2}
+                      value={content.contactAddress}
+                      onChange={(e) => set("contactAddress", e.target.value)}
+                    />
+                  </div>
+                  <div className="wad-field">
+                    <label className="wad-label">Hours</label>
+                    <input
+                      className="wad-input"
+                      value={content.contactHours}
+                      onChange={(e) => set("contactHours", e.target.value)}
+                    />
+                  </div>
+                  <div className="wad-grid-3">
+                    <div className="wad-field">
+                      <label className="wad-label">Facebook URL</label>
+                      <input
+                        className="wad-input"
+                        value={content.socialLinks?.facebook || ""}
+                        onChange={(e) =>
+                          set("socialLinks", {
+                            ...content.socialLinks,
+                            facebook: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">Instagram URL</label>
+                      <input
+                        className="wad-input"
+                        value={content.socialLinks?.instagram || ""}
+                        onChange={(e) =>
+                          set("socialLinks", {
+                            ...content.socialLinks,
+                            instagram: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="wad-field">
+                      <label className="wad-label">YouTube URL</label>
+                      <input
+                        className="wad-input"
+                        value={content.socialLinks?.youtube || ""}
+                        onChange={(e) =>
+                          set("socialLinks", {
+                            ...content.socialLinks,
+                            youtube: e.target.value,
+                          })
+                        }
+                      />
                     </div>
                   </div>
                 </div>
@@ -1981,25 +2259,14 @@ export const WebAdminDashboard = () => {
         </div>
       </div>
 
-      {/* ── Modals ── */}
+      {/* ═══ MODALS ═══ */}
       {modal?.type === "slide" && (
-        <SlideModal
+        <HeroSlideModal
           slide={modal.data}
-          onSave={(slide) =>
+          onSave={(s) =>
             modal.index !== undefined
-              ? updateSlide(modal.index, slide)
-              : addSlide(slide)
-          }
-          onClose={() => setModal(null)}
-        />
-      )}
-      {modal?.type === "gallery" && (
-        <GalleryModal
-          item={modal.data}
-          onSave={(item) =>
-            modal.index !== undefined
-              ? updateGallery(modal.index, item)
-              : addGallery(item)
+              ? updateSlide(modal.index, s)
+              : addSlide(s)
           }
           onClose={() => setModal(null)}
         />
@@ -2015,8 +2282,15 @@ export const WebAdminDashboard = () => {
           onClose={() => setModal(null)}
         />
       )}
+      {modal?.type === "galleryCollection" && (
+        <GalleryCollectionModal
+          item={modal.data}
+          onSave={addGalleryPhoto}
+          onClose={() => setModal(null)}
+        />
+      )}
 
-      {/* ── Toast ── */}
+      {/* ═══ TOAST ═══ */}
       {toast && <div className={`wad-toast ${toast.type}`}>{toast.msg}</div>}
     </>
   );

@@ -17,6 +17,9 @@ import {
   query as fbQuery,
   where as fbWhere,
   addDoc as fbAddDoc,
+  onSnapshot as fbOnSnapshot,
+  orderBy as fbOrderBy,
+  deleteDoc as fbDeleteDoc,
 } from "firebase/firestore";
 
 // Read Firebase config from Vite environment variables (VITE_ prefix)
@@ -48,7 +51,9 @@ if (isFirebaseConfigured) {
     const secondaryApp = initializeApp(liveConfig, "SecondaryApp");
     secondaryAuth = getAuth(secondaryApp);
   } catch (e) {
-    import("./utils/logger").then(({ warn }) => warn("Secondary app init failed", e));
+    import("./utils/logger").then(({ warn }) =>
+      warn("Secondary app init failed", e),
+    );
   }
 }
 
@@ -111,8 +116,8 @@ const getMockDb = () => {
             breakdown: {
               monthlyTuition: 3000,
               yearlyTerm: 10000,
-              extraCharges: 4000
-            }
+              extraCharges: 4000,
+            },
           },
           attendanceHistory: [
             { date: "2026-06-16", status: "Present" },
@@ -162,8 +167,8 @@ const getMockDb = () => {
             breakdown: {
               monthlyTuition: 3000,
               yearlyTerm: 10000,
-              extraCharges: 4000
-            }
+              extraCharges: 4000,
+            },
           },
           attendanceHistory: [
             { date: "2026-06-16", status: "Present" },
@@ -201,8 +206,8 @@ const getMockDb = () => {
             breakdown: {
               monthlyTuition: 2800,
               yearlyTerm: 9000,
-              extraCharges: 5400
-            }
+              extraCharges: 5400,
+            },
           },
           attendanceHistory: [
             { date: "2026-06-16", status: "Absent" },
@@ -234,7 +239,7 @@ const getMockDb = () => {
             base: 40000,
             allowances: 5000,
             deductions: 0,
-            net: 45000
+            net: 45000,
           },
           bankDetails: "SBI A/C: 38291029302",
           syllabusCompletion: 78,
@@ -526,7 +531,10 @@ export const updateDoc = async (docRef, data) => {
             ...data,
           };
         }
-      } else if (database[collectionName] && typeof database[collectionName] === "object") {
+      } else if (
+        database[collectionName] &&
+        typeof database[collectionName] === "object"
+      ) {
         database[collectionName][docId] = {
           ...database[collectionName][docId],
           ...data,
@@ -609,6 +617,32 @@ export const where = (field, op, value) => {
   return fbWhere(field, op, value);
 };
 
+export const orderBy = (field, direction = "asc") => {
+  if (!isFirebaseConfigured) {
+    return { type: "orderBy", field, direction };
+  }
+  return fbOrderBy(field, direction);
+};
+
+export const deleteDoc = async (docRef) => {
+  if (!isFirebaseConfigured) {
+    const database = getMockDb();
+    const { collectionName, docId } = docRef;
+
+    if (Array.isArray(database[collectionName])) {
+      database[collectionName] = database[collectionName].filter(
+        (item) => item.id !== docId && item.uid !== docId,
+      );
+    } else if (typeof database[collectionName] === "object") {
+      delete database[collectionName][docId];
+    }
+
+    saveMockDb(database);
+    return;
+  }
+  return fbDeleteDoc(docRef);
+};
+
 export const addDoc = async (colRef, data) => {
   if (!isFirebaseConfigured) {
     const database = getMockDb();
@@ -646,3 +680,21 @@ export const resetMockDb = () => {
   getMockDb();
 };
 export const isMockMode = !isFirebaseConfigured;
+
+export const onSnapshot = (docRef, callback) => {
+  if (!isFirebaseConfigured) {
+    // For mock mode, just fire the callback once with current data
+    getDoc(docRef).then((snapshot) => callback(snapshot));
+    // And listen to the storage event to refire
+    const handleStorage = () => {
+      getDoc(docRef).then((snapshot) => callback(snapshot));
+    };
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("school-erp-content-updated", handleStorage);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("school-erp-content-updated", handleStorage);
+    };
+  }
+  return fbOnSnapshot(docRef, callback);
+};
