@@ -33,9 +33,15 @@ const liveConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Consider Firebase configured only when required env vars are present
+// Consider Firebase configured only when required env vars are present.
+// If env vars are partially set but demo users don't exist in real Firebase,
+// parent/teacher logins fail with auth/invalid-credential.
 const isFirebaseConfigured = Boolean(
-  liveConfig.apiKey && liveConfig.projectId && liveConfig.appId,
+  liveConfig.apiKey &&
+  liveConfig.projectId &&
+  liveConfig.appId &&
+  // Allow forcing mock mode even if Firebase env is present
+  import.meta.env.VITE_FORCE_MOCK_AUTH !== "true",
 );
 
 let firebaseApp;

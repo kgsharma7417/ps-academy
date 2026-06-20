@@ -119,6 +119,27 @@ export const TeacherDashboard = () => {
     return `${formatTime(startTotalMinutes)} - ${formatTime(endTotalMinutes)}`;
   };
 
+  /**
+   * FIX (UX): Returns the period string ("1st", "2nd", ...) that contains the
+   * current time, or null if outside the 7-period school day. Used only to
+   * visually highlight "what's happening right now" on the timetable.
+   */
+  const getCurrentPeriod = (startHour, durationMinutes, atDate) => {
+    const periods = ["1st", "2nd", "3rd", "4th", "5th", "6th", "7th"];
+    const start = parseInt(startHour) || 8;
+    const dur = parseInt(durationMinutes) || 60;
+    const nowMinutes = atDate.getHours() * 60 + atDate.getMinutes();
+
+    for (let i = 0; i < periods.length; i++) {
+      const slotStart = start * 60 + i * dur;
+      const slotEnd = slotStart + dur;
+      if (nowMinutes >= slotStart && nowMinutes < slotEnd) {
+        return periods[i];
+      }
+    }
+    return null;
+  };
+
   const [leaveForm, setLeaveForm] = useState({
     days: "1 Day",
     reason: "",
@@ -180,6 +201,28 @@ export const TeacherDashboard = () => {
     presentTodayCount: 0,
     attendanceRate: 0,
   });
+
+  // FIX (UX): Quick search box to find a student fast inside a long attendance
+  // list. Purely a display filter — never touches attendanceMap/students, so
+  // submission logic is untouched.
+  const [attendanceSearchQuery, setAttendanceSearchQuery] = useState("");
+
+  // FIX (UX): Confirmation step before final submit — prevents accidental
+  // wrong submissions when a teacher taps Submit by mistake.
+  const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
+
+  // FIX (UX): Lets the teacher know they're viewing/editing attendance that
+  // was already saved for the selected date, instead of silently loading it.
+  const [attendanceAlreadySubmitted, setAttendanceAlreadySubmitted] =
+    useState(false);
+
+  // FIX (UX): Live clock — used to highlight "today" and the "current period"
+  // on the timetable. Ticks every minute, no functional/data impact.
+  const [now, setNow] = useState(new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
   // ─── NOTIFICATION ──────────────────────────────────────────────────────────
 
@@ -353,6 +396,7 @@ export const TeacherDashboard = () => {
   const fetchClassData = useCallback(async () => {
     if (!selectedClass) return;
     setLoadingStudents(true);
+    setAttendanceAlreadySubmitted(false);
     let list = [];
 
     try {
@@ -399,6 +443,8 @@ export const TeacherDashboard = () => {
             freshMap[s.id] = existingLog.present.includes(s.id);
           });
         }
+        // FIX (UX): Surface whether this date already has a saved record.
+        setAttendanceAlreadySubmitted(Boolean(existingLog));
 
         // FIX: Timetable respects selectedSection now
         const key = `${selectedClass}_${selectedSection}`;
@@ -600,6 +646,16 @@ export const TeacherDashboard = () => {
 
     setSaveLoading(false);
     operationRef.current = false;
+  };
+
+  /**
+   * FIX (UX): Wraps handleSubmitAttendance with the new confirmation modal.
+   * Does not change what gets saved — just adds a "are you sure" checkpoint
+   * before the existing handleSubmitAttendance logic runs.
+   */
+  const confirmAndSubmitAttendance = async () => {
+    await handleSubmitAttendance();
+    setShowSubmitConfirm(false);
   };
 
   // ─── LEAVE HANDLER ─────────────────────────────────────────────────────────
@@ -840,6 +896,72 @@ export const TeacherDashboard = () => {
     triggerNotification("Marks report exported!");
   };
 
+  /**
+   * FIX (UX): Lets a teacher print/save a single salary slip as PDF via the
+   * browser's native print dialog. Purely presentational — reads slip data,
+   * writes nothing back.
+   */
+  const handlePrintSalarySlip = (slip) => {
+    const printWindow = window.open("", "_blank", "width=480,height=640");
+    if (!printWindow) {
+      triggerNotification(
+        "Pop-up blocked — allow pop-ups to print the slip.",
+        "error",
+      );
+      return;
+    }
+    const rows = [
+      ["Month", slip.month ?? "-"],
+      ["Base Pay", `₹${(slip.base || slip.gross || 0).toLocaleString()}`],
+      [
+        "Allowances",
+        slip.allowances !== undefined
+          ? `₹${slip.allowances.toLocaleString()}`
+          : "-",
+      ],
+      [
+        "Deductions",
+        slip.deductions !== undefined
+          ? `₹${slip.deductions.toLocaleString()}`
+          : "-",
+      ],
+      ["Net Pay", `₹${(slip.net ?? 0).toLocaleString()}`],
+      ["Status", slip.status || "Paid"],
+    ];
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Salary Slip - ${slip.month ?? ""}</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 32px; color: #1e293b; }
+            h2 { margin-bottom: 4px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+            td { padding: 8px 0; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+            td:first-child { color: #64748b; font-weight: bold; }
+            td:last-child { text-align: right; font-weight: bold; }
+          </style>
+        </head>
+        <body>
+          <h2>P.S Academy — Salary Slip</h2>
+          <p style="color:#64748b;font-size:12px;">Teacher: ${
+            userData?.name ?? "Teacher"
+          }</p>
+          <table>
+            ${rows
+              .map(
+                ([label, value]) =>
+                  `<tr><td>${label}</td><td>${value}</td></tr>`,
+              )
+              .join("")}
+          </table>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   // ─── UI HELPERS ────────────────────────────────────────────────────────────
 
   /**
@@ -903,7 +1025,12 @@ export const TeacherDashboard = () => {
               { id: "salary", label: "My Salary Slips", icon: DollarSign },
               { id: "leave", label: "Apply Leave", icon: PlusCircle },
               { id: "timetable", label: "Class Timetable", icon: Clock },
-              { id: "notices", label: "Circular Bulletins", icon: Megaphone },
+              {
+                id: "notices",
+                label: "Circular Bulletins",
+                icon: Megaphone,
+                badge: teacherNotices.length || null,
+              },
               { id: "profile", label: "My Profile Desk", icon: User },
             ].map((tab) => {
               const IconComp = tab.icon;
@@ -918,6 +1045,18 @@ export const TeacherDashboard = () => {
                   }`}
                 >
                   <IconComp className="w-4 h-4 shrink-0" /> {tab.label}
+                  {/* FIX (UX): quick-glance count, no functional effect */}
+                  {tab.badge ? (
+                    <span
+                      className={`ml-auto text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                        activeTab === tab.id
+                          ? "bg-white/20 text-white"
+                          : "bg-emerald-500/20 text-emerald-400"
+                      }`}
+                    >
+                      {tab.badge}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
@@ -1052,124 +1191,242 @@ export const TeacherDashboard = () => {
           )}
 
           {/* ══ TAB: MARK ATTENDANCE ══ */}
-          {activeTab === "attendance" && (
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
-              <div className="flex justify-between items-start pb-4 border-b border-slate-100 gap-4 flex-wrap">
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-800">
-                    Mark Daily Attendance
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    Class {selectedClass} - {selectedSection} &nbsp;|&nbsp; Once
-                    submitted, only Principal can modify.
-                  </p>
-                </div>
-                <input
-                  type="date"
-                  value={currentDate}
-                  max={new Date().toISOString().split("T")[0]}
-                  onChange={(e) => setCurrentDate(e.target.value)}
-                  className="border border-slate-200 rounded-lg px-2 py-1 text-xs"
-                />
-              </div>
+          {activeTab === "attendance" &&
+            (() => {
+              const todayStr = new Date().toISOString().split("T")[0];
+              // FIX (UX): display-only filter — `students` (and therefore
+              // attendanceMap / submission) stays exactly as before.
+              const visibleStudents = students.filter((s) => {
+                const q = attendanceSearchQuery.trim().toLowerCase();
+                if (!q) return true;
+                return (
+                  s.name?.toLowerCase().includes(q) ||
+                  String(s.rollNo ?? "").includes(q)
+                );
+              });
 
-              {/* FIX: Bulk action buttons */}
-              {!loadingStudents && students.length > 0 && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleMarkAllPresent}
-                    className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-bold rounded-lg hover:bg-emerald-100 transition-all"
-                  >
-                    Mark All Present
-                  </button>
-                  <button
-                    onClick={handleMarkAllAbsent}
-                    className="px-3 py-1.5 bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-all"
-                  >
-                    Mark All Absent
-                  </button>
-                  <span className="text-[10px] text-slate-400 self-center ml-2">
-                    {classStats.presentTodayCount} present /{" "}
-                    {classStats.totalCount} total
-                  </span>
-                </div>
-              )}
-
-              {loadingStudents ? (
-                <p className="text-center py-8 text-slate-400 text-xs">
-                  Loading students...
-                </p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead>
-                      <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider">
-                        <th className="pb-3">Roll No</th>
-                        <th className="pb-3">Student Name</th>
-                        <th className="pb-3 text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {students.map((s) => (
-                        <tr key={s.id}>
-                          <td className="py-3 font-mono font-bold">
-                            {s.rollNo}
-                          </td>
-                          <td className="py-3 font-semibold text-slate-800">
-                            {s.name}
-                          </td>
-                          <td className="py-3">
-                            <div className="flex justify-center">
-                              <button
-                                onClick={() => handleToggleAttendance(s.id)}
-                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${
-                                  attendanceMap[s.id] === true
-                                    ? "bg-emerald-50 border-emerald-100 text-emerald-600 hover:bg-emerald-100"
-                                    : "bg-rose-50 border-rose-100 text-rose-600 hover:bg-rose-100"
-                                }`}
-                              >
-                                {attendanceMap[s.id] === true
-                                  ? "✓ Present"
-                                  : "✗ Absent"}
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                      {students.length === 0 && (
-                        <tr>
-                          <td
-                            colSpan="3"
-                            className="py-8 text-center text-slate-400"
-                          >
-                            No students found in this class.
-                          </td>
-                        </tr>
+              return (
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+                  <div className="flex justify-between items-start pb-4 border-b border-slate-100 gap-4 flex-wrap">
+                    <div>
+                      <h3 className="text-base font-extrabold text-slate-800 flex items-center gap-2 flex-wrap">
+                        Mark Daily Attendance
+                        {/* FIX (UX): tells the teacher this date isn't a blank slate */}
+                        {attendanceAlreadySubmitted && (
+                          <span className="text-[9px] font-bold px-2 py-0.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-full normal-case">
+                            ✓ Already marked — editing
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        Class {selectedClass} - {selectedSection} &nbsp;|&nbsp;
+                        Once submitted, only Principal can modify.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {/* FIX (UX): one tap back to today instead of using the date picker */}
+                      {currentDate !== todayStr && (
+                        <button
+                          onClick={() => setCurrentDate(todayStr)}
+                          className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold rounded-lg transition-all"
+                        >
+                          Today
+                        </button>
                       )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+                      <input
+                        type="date"
+                        value={currentDate}
+                        max={todayStr}
+                        onChange={(e) => setCurrentDate(e.target.value)}
+                        className="border border-slate-200 rounded-lg px-2 py-1 text-xs"
+                      />
+                    </div>
+                  </div>
 
-              <div className="flex justify-between items-center pt-4 border-t border-slate-100">
-                <span className="text-[10px] text-slate-400">
-                  Marking as:{" "}
-                  <span className="font-bold text-slate-600">
-                    {userData?.name ?? "Teacher"}
-                  </span>
-                </span>
-                <button
-                  onClick={handleSubmitAttendance}
-                  disabled={
-                    saveLoading || loadingStudents || students.length === 0
-                  }
-                  className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-md transition-all"
-                >
-                  {saveLoading ? "Saving..." : "Submit Daily Attendance"}
-                </button>
-              </div>
-            </div>
-          )}
+                  {/* FIX (UX): quick search so a teacher doesn't have to scroll a long roster */}
+                  {!loadingStudents && students.length > 5 && (
+                    <input
+                      type="text"
+                      value={attendanceSearchQuery}
+                      onChange={(e) => setAttendanceSearchQuery(e.target.value)}
+                      placeholder="Search by name or roll no..."
+                      className="w-full sm:w-72 border border-slate-200 rounded-xl px-4 py-2 text-xs bg-slate-50 outline-none"
+                    />
+                  )}
+
+                  {/* FIX: Bulk action buttons */}
+                  {!loadingStudents && students.length > 0 && (
+                    <div className="flex gap-2 flex-wrap">
+                      <button
+                        onClick={handleMarkAllPresent}
+                        className="px-3 py-1.5 bg-emerald-50 border border-emerald-100 text-emerald-600 text-[10px] font-bold rounded-lg hover:bg-emerald-100 transition-all"
+                      >
+                        Mark All Present
+                      </button>
+                      <button
+                        onClick={handleMarkAllAbsent}
+                        className="px-3 py-1.5 bg-rose-50 border border-rose-100 text-rose-600 text-[10px] font-bold rounded-lg hover:bg-rose-100 transition-all"
+                      >
+                        Mark All Absent
+                      </button>
+                      <span className="text-[10px] text-slate-400 self-center ml-2">
+                        {classStats.presentTodayCount} present /{" "}
+                        {classStats.totalCount} total
+                      </span>
+                    </div>
+                  )}
+
+                  {loadingStudents ? (
+                    // FIX (UX): skeleton rows instead of plain "Loading..." text
+                    <div className="space-y-2 animate-pulse">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <div
+                          key={i}
+                          className="h-10 bg-slate-100 rounded-lg w-full"
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead>
+                          <tr className="border-b border-slate-200 text-slate-400 font-bold uppercase tracking-wider sticky top-0 bg-white">
+                            <th className="pb-3">Roll No</th>
+                            <th className="pb-3">Student Name</th>
+                            <th className="pb-3 text-center">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {visibleStudents.map((s) => (
+                            // FIX (UX): whole row toggles attendance — bigger,
+                            // faster tap target than just the small button.
+                            <tr
+                              key={s.id}
+                              onClick={() => handleToggleAttendance(s.id)}
+                              className="cursor-pointer hover:bg-slate-50 transition-colors"
+                            >
+                              <td className="py-3 font-mono font-bold">
+                                {s.rollNo}
+                              </td>
+                              <td className="py-3 font-semibold text-slate-800">
+                                {s.name}
+                              </td>
+                              <td className="py-3">
+                                <div className="flex justify-center">
+                                  <span
+                                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold border transition-all ${
+                                      attendanceMap[s.id] === true
+                                        ? "bg-emerald-50 border-emerald-100 text-emerald-600"
+                                        : "bg-rose-50 border-rose-100 text-rose-600"
+                                    }`}
+                                  >
+                                    {attendanceMap[s.id] === true
+                                      ? "✓ Present"
+                                      : "✗ Absent"}
+                                  </span>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {visibleStudents.length === 0 &&
+                            students.length > 0 && (
+                              <tr>
+                                <td
+                                  colSpan="3"
+                                  className="py-8 text-center text-slate-400"
+                                >
+                                  No student matches "{attendanceSearchQuery}".
+                                </td>
+                              </tr>
+                            )}
+                          {students.length === 0 && (
+                            <tr>
+                              <td
+                                colSpan="3"
+                                className="py-8 text-center text-slate-400"
+                              >
+                                No students found in this class.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {/* FIX (UX): sticky on mobile so the submit button is always reachable */}
+                  <div className="flex justify-between items-center pt-4 border-t border-slate-100 sticky bottom-0 bg-white">
+                    <span className="text-[10px] text-slate-400">
+                      Marking as:{" "}
+                      <span className="font-bold text-slate-600">
+                        {userData?.name ?? "Teacher"}
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => setShowSubmitConfirm(true)}
+                      disabled={
+                        saveLoading || loadingStudents || students.length === 0
+                      }
+                      className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                    >
+                      {saveLoading ? "Saving..." : "Submit Daily Attendance"}
+                    </button>
+                  </div>
+
+                  {/* FIX (UX): confirmation summary modal — same data, just a checkpoint */}
+                  {showSubmitConfirm && (
+                    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                      <div className="bg-white border border-slate-200 p-6 rounded-3xl max-w-sm w-full space-y-5 shadow-2xl">
+                        <div>
+                          <h3 className="text-base font-extrabold text-slate-800">
+                            Confirm Attendance Submission
+                          </h3>
+                          <p className="text-xs text-slate-500 mt-1">
+                            Class {selectedClass} - {selectedSection} on{" "}
+                            {currentDate}
+                          </p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-center">
+                            <span className="text-lg font-black text-emerald-600 block">
+                              {classStats.presentTodayCount}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase">
+                              Present
+                            </span>
+                          </div>
+                          <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-center">
+                            <span className="text-lg font-black text-rose-500 block">
+                              {classStats.totalCount -
+                                classStats.presentTodayCount}
+                            </span>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase">
+                              Absent
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end pt-2">
+                          <button
+                            onClick={() => setShowSubmitConfirm(false)}
+                            disabled={saveLoading}
+                            className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs rounded-xl transition-all"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            onClick={confirmAndSubmitAttendance}
+                            disabled={saveLoading}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-300 text-white font-bold text-xs rounded-xl transition-all"
+                          >
+                            {saveLoading ? "Saving..." : "Confirm & Submit"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
           {/* ══ TAB: ATTENDANCE HISTORY ══ */}
           {activeTab === "attendance_history" && (
@@ -1296,6 +1553,31 @@ export const TeacherDashboard = () => {
                   (s.rollNo && String(s.rollNo).includes(searchStudentQuery));
                 return matchClass && matchSection && matchQuery;
               });
+
+              // FIX (UX): how many of the currently-filtered students already
+              // have a mark for the subject/exam picked in the form — pure
+              // read-only derived value, doesn't touch handleUploadMarks.
+              const gradedCount = filteredAllStudents.filter((s) =>
+                (s.marks ?? []).some(
+                  (m) =>
+                    m.subject === marksForm.subject &&
+                    m.exam === marksForm.exam,
+                ),
+              ).length;
+
+              // FIX (UX): if the selected student already has an entry for
+              // this subject/exam, show it so the teacher knows they're
+              // updating rather than creating a new one.
+              const existingMarkEntry = marksForm.studentId
+                ? (
+                    allStudents.find((s) => s.id === marksForm.studentId)
+                      ?.marks ?? []
+                  ).find(
+                    (m) =>
+                      m.subject === marksForm.subject &&
+                      m.exam === marksForm.exam,
+                  )
+                : null;
 
               return (
                 <div className="space-y-6">
@@ -1427,6 +1709,46 @@ export const TeacherDashboard = () => {
                             <option value="Assignment">Assignment</option>
                           </select>
                         </div>
+
+                        {/* FIX (UX): progress for this subject+exam across the filtered list */}
+                        {filteredAllStudents.length > 0 && (
+                          <div className="p-2.5 bg-indigo-50 border border-indigo-100 rounded-lg">
+                            <div className="flex justify-between text-[10px] font-bold text-indigo-600 mb-1">
+                              <span>
+                                {marksForm.subject} — {marksForm.exam}
+                              </span>
+                              <span>
+                                {gradedCount} / {filteredAllStudents.length}{" "}
+                                graded
+                              </span>
+                            </div>
+                            <div className="h-1.5 bg-indigo-100 rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-indigo-500 rounded-full transition-all"
+                                style={{
+                                  width: `${
+                                    filteredAllStudents.length > 0
+                                      ? Math.round(
+                                          (gradedCount /
+                                            filteredAllStudents.length) *
+                                            100,
+                                        )
+                                      : 0
+                                  }%`,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )}
+
+                        {/* FIX (UX): tells teacher if they're about to overwrite an entry */}
+                        {existingMarkEntry && (
+                          <div className="p-2.5 bg-amber-50 border border-amber-100 rounded-lg text-[10px] text-amber-700 font-semibold">
+                            Existing entry: {existingMarkEntry.marksObtained}/
+                            {existingMarkEntry.maxMarks} — submitting will
+                            update it.
+                          </div>
+                        )}
 
                         <div className="grid grid-cols-2 gap-3">
                           <div>
@@ -1838,9 +2160,18 @@ export const TeacherDashboard = () => {
                               {slip.status || "Paid"}
                             </span>
                           </div>
-                          <span className="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded uppercase font-bold">
-                            Direct Deposit
-                          </span>
+                          <div className="flex flex-col items-end gap-1.5">
+                            <span className="text-[9px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded uppercase font-bold">
+                              Direct Deposit
+                            </span>
+                            {/* FIX (UX): quick print/save-as-PDF for one slip */}
+                            <button
+                              onClick={() => handlePrintSalarySlip(slip)}
+                              className="text-[9px] font-bold px-2 py-0.5 bg-indigo-50 text-indigo-500 border border-indigo-100 rounded hover:bg-indigo-100 transition-colors"
+                            >
+                              Print Slip
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -1945,9 +2276,13 @@ export const TeacherDashboard = () => {
               </div>
 
               <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm">
-                <h3 className="text-base font-extrabold text-slate-800 mb-4">
+                <h3 className="text-base font-extrabold text-slate-800 mb-1">
                   Leave Balance
                 </h3>
+                {/* FIX (UX): freshness note so the teacher knows how current this is */}
+                <p className="text-[10px] text-slate-400 mb-4">
+                  As of {new Date().toLocaleDateString()}
+                </p>
                 {/* FIX: Dynamic leave balance from state */}
                 <div className="grid grid-cols-3 gap-4 mb-6">
                   <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-xl text-center">
@@ -1992,121 +2327,186 @@ export const TeacherDashboard = () => {
           )}
 
           {/* ══ TAB: TIMETABLE ══ */}
-          {activeTab === "timetable" && (
-            <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden">
-              <h3 className="text-base font-extrabold text-slate-800 mb-6">
-                Weekly Schedule — Class {selectedClass} - {selectedSection}
-              </h3>
-              {timetable.length === 0 ? (
-                <p className="text-center py-8 text-slate-400 text-xs">
-                  No timetable set yet. Contact Principal.
-                </p>
-              ) : (
-                <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
-                        <th className="py-4 px-4 font-extrabold text-slate-800 border-r border-slate-200">
-                          Day
-                        </th>
-                        {["1st", "2nd", "3rd", "4th", "5th", "6th", "7th"].map(
-                          (p) => {
-                            const timeStr = getPeriodTime(
-                              p,
-                              timetableStartHour,
-                              timetablePeriodDuration,
-                            );
-                            return (
-                              <th
-                                key={p}
-                                className="py-4 px-3 text-center border-r border-slate-200 last:border-r-0 min-w-[140px]"
-                              >
-                                <span className="block text-indigo-650 font-black">
-                                  {p}
-                                </span>
-                                <span className="block text-[9px] text-slate-400 font-normal mt-0.5 normal-case font-mono">
-                                  {timeStr}
-                                </span>
-                              </th>
-                            );
-                          },
-                        )}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 bg-white">
-                      {[
-                        "Monday",
-                        "Tuesday",
-                        "Wednesday",
-                        "Thursday",
-                        "Friday",
-                        "Saturday",
-                      ].map((day) => (
-                        <tr
-                          key={day}
-                          className="hover:bg-slate-50/60 transition-colors"
-                        >
-                          <td className="py-4 px-4 text-xs font-black text-slate-700 bg-slate-50/40 border-r border-slate-200">
-                            {day}
-                          </td>
-                          {[
-                            "1st",
-                            "2nd",
-                            "3rd",
-                            "4th",
-                            "5th",
-                            "6th",
-                            "7th",
-                          ].map((p) => {
-                            const slotData = timetable.find(
-                              (t) => t.day === day && t.period === p,
-                            );
-                            return (
-                              <td
-                                key={p}
-                                className="p-2 border-r border-slate-100 last:border-r-0 text-center vertical-align-middle"
-                              >
-                                {slotData ? (
-                                  <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-100 text-left hover:scale-[1.02] hover:bg-emerald-50/90 transition-all">
-                                    <span
-                                      className="font-extrabold text-emerald-700 text-[11px] block truncate"
-                                      title={slotData.subject}
-                                    >
-                                      {slotData.subject}
-                                    </span>
-                                    <span
-                                      className="text-[10px] text-slate-500 block mt-1 truncate"
-                                      title={slotData.teacherName}
-                                    >
-                                      👤 {slotData.teacherName}
-                                    </span>
-                                    <span className="text-[9px] text-slate-450 font-mono block mt-0.5">
-                                      ⏱{" "}
-                                      {
-                                        getPeriodTime(
-                                          p,
-                                          timetableStartHour,
-                                          timetablePeriodDuration,
-                                        ).split(" - ")[0]
-                                      }
-                                    </span>
-                                  </div>
-                                ) : (
-                                  <span className="text-[11px] text-slate-300 italic">
-                                    -
+          {activeTab === "timetable" &&
+            (() => {
+              // FIX (UX): purely visual — figures out "today" and "right now"
+              // from the ticking clock, doesn't touch timetable data at all.
+              const todayName = now.toLocaleDateString("en-US", {
+                weekday: "long",
+              });
+              const currentPeriod = getCurrentPeriod(
+                timetableStartHour,
+                timetablePeriodDuration,
+                now,
+              );
+
+              return (
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden">
+                  <h3 className="text-base font-extrabold text-slate-800 mb-6">
+                    Weekly Schedule — Class {selectedClass} - {selectedSection}
+                  </h3>
+                  {timetable.length === 0 ? (
+                    <p className="text-center py-8 text-slate-400 text-xs">
+                      No timetable set yet. Contact Principal.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
+                            <th className="py-4 px-4 font-extrabold text-slate-800 border-r border-slate-200">
+                              Day
+                            </th>
+                            {[
+                              "1st",
+                              "2nd",
+                              "3rd",
+                              "4th",
+                              "5th",
+                              "6th",
+                              "7th",
+                            ].map((p) => {
+                              const timeStr = getPeriodTime(
+                                p,
+                                timetableStartHour,
+                                timetablePeriodDuration,
+                              );
+                              const isCurrent = p === currentPeriod;
+                              return (
+                                <th
+                                  key={p}
+                                  className={`py-4 px-3 text-center border-r border-slate-200 last:border-r-0 min-w-[140px] ${
+                                    isCurrent ? "bg-indigo-50" : ""
+                                  }`}
+                                >
+                                  <span className="block text-indigo-650 font-black">
+                                    {p}
                                   </span>
-                                )}
-                              </td>
+                                  <span className="block text-[9px] text-slate-400 font-normal mt-0.5 normal-case font-mono">
+                                    {timeStr}
+                                  </span>
+                                  {/* FIX (UX): live indicator */}
+                                  {isCurrent && (
+                                    <span className="block text-[8px] font-black text-indigo-500 mt-0.5 normal-case">
+                                      ● Now
+                                    </span>
+                                  )}
+                                </th>
+                              );
+                            })}
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 bg-white">
+                          {[
+                            "Monday",
+                            "Tuesday",
+                            "Wednesday",
+                            "Thursday",
+                            "Friday",
+                            "Saturday",
+                          ].map((day) => {
+                            const isToday = day === todayName;
+                            return (
+                              <tr
+                                key={day}
+                                className={`hover:bg-slate-50/60 transition-colors ${
+                                  isToday ? "bg-indigo-50/30" : ""
+                                }`}
+                              >
+                                <td
+                                  className={`py-4 px-4 text-xs font-black border-r border-slate-200 ${
+                                    isToday
+                                      ? "text-indigo-600 bg-indigo-50/60"
+                                      : "text-slate-700 bg-slate-50/40"
+                                  }`}
+                                >
+                                  {day}
+                                  {/* FIX (UX): today badge */}
+                                  {isToday && (
+                                    <span className="block text-[8px] font-black text-indigo-400 normal-case mt-0.5">
+                                      Today
+                                    </span>
+                                  )}
+                                </td>
+                                {[
+                                  "1st",
+                                  "2nd",
+                                  "3rd",
+                                  "4th",
+                                  "5th",
+                                  "6th",
+                                  "7th",
+                                ].map((p) => {
+                                  const slotData = timetable.find(
+                                    (t) => t.day === day && t.period === p,
+                                  );
+                                  const isLiveNow =
+                                    isToday && p === currentPeriod;
+                                  return (
+                                    <td
+                                      key={p}
+                                      className={`p-2 border-r border-slate-100 last:border-r-0 text-center vertical-align-middle ${
+                                        isLiveNow ? "bg-indigo-50/40" : ""
+                                      }`}
+                                    >
+                                      {slotData ? (
+                                        <div
+                                          className={`p-2.5 rounded-xl text-left hover:scale-[1.02] transition-all ${
+                                            isLiveNow
+                                              ? "bg-indigo-50 border-2 border-indigo-300 shadow-sm"
+                                              : "bg-emerald-50 border border-emerald-100 hover:bg-emerald-50/90"
+                                          }`}
+                                        >
+                                          {isLiveNow && (
+                                            <span className="text-[8px] font-black text-indigo-500 block mb-0.5">
+                                              ● LIVE NOW
+                                            </span>
+                                          )}
+                                          <span
+                                            className={`font-extrabold text-[11px] block truncate ${
+                                              isLiveNow
+                                                ? "text-indigo-700"
+                                                : "text-emerald-700"
+                                            }`}
+                                            title={slotData.subject}
+                                          >
+                                            {slotData.subject}
+                                          </span>
+                                          <span
+                                            className="text-[10px] text-slate-500 block mt-1 truncate"
+                                            title={slotData.teacherName}
+                                          >
+                                            👤 {slotData.teacherName}
+                                          </span>
+                                          <span className="text-[9px] text-slate-450 font-mono block mt-0.5">
+                                            ⏱{" "}
+                                            {
+                                              getPeriodTime(
+                                                p,
+                                                timetableStartHour,
+                                                timetablePeriodDuration,
+                                              ).split(" - ")[0]
+                                            }
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        <span className="text-[11px] text-slate-300 italic">
+                                          -
+                                        </span>
+                                      )}
+                                    </td>
+                                  );
+                                })}
+                              </tr>
                             );
                           })}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+              );
+            })()}
 
           {/* ══ TAB: NOTICES ══ */}
           {activeTab === "notices" && (
