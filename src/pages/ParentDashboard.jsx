@@ -613,7 +613,7 @@ export const ParentDashboard = () => {
             </div>
             <div>
               <h2 className="text-sm font-extrabold text-white tracking-wider truncate">
-                Shree H.S. Model
+                P.S ACADEMY
               </h2>
               <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400">
                 Student Portal
@@ -1002,7 +1002,7 @@ export const ParentDashboard = () => {
                           <span className="text-slate-450">Bank Name:</span>
                           <span className="font-semibold text-slate-800 text-right">State Bank of India (SBI)</span>
                           <span className="text-slate-450">Account Holder:</span>
-                          <span className="font-semibold text-slate-800 text-right">Shree H.S. Model School Admin</span>
+                          <span className="font-semibold text-slate-800 text-right">PS ACADEMY Admin</span>
                           <span className="text-slate-450">Account Number:</span>
                           <span className="font-mono font-bold text-slate-850 text-right">38291029302</span>
                           <span className="text-slate-450">IFSC Code:</span>
@@ -1328,7 +1328,7 @@ export const ParentDashboard = () => {
                     <div className="bg-white border border-slate-200 p-8 rounded-3xl max-w-xl w-full space-y-6 shadow-2xl relative">
                       <div className="text-center border-b pb-4 border-slate-150">
                         <span className="text-xs text-indigo-600 font-extrabold tracking-widest uppercase">Official Hall Ticket</span>
-                        <h2 className="text-lg font-black text-slate-850 mt-1">SHREE H.S. MODEL INTER COLLEGE</h2>
+                        <h2 className="text-lg font-black text-slate-850 mt-1">P.S ACADEMY</h2>
                         <span className="text-[10px] text-slate-400 font-bold block uppercase mt-0.5">Academic Session Session 2026 - 2027</span>
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-xs bg-slate-50 p-4 rounded-2xl border border-slate-100">

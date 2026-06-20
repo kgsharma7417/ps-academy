@@ -14,6 +14,7 @@ import { AdminDashboard } from "./pages/AdminDashboard";
 import { TeacherDashboard } from "./pages/TeacherDashboard";
 import { ParentDashboard } from "./pages/ParentDashboard";
 import { WebAdminDashboard } from "./pages/WebAdminDashboard";
+import { GalleryPage } from "./pages/GalleryPage";
 
 function App() {
   return (
@@ -58,6 +59,10 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Fallback Catch-All */}
+          {/* Gallery Page */}
+          <Route path="/gallery" element={<GalleryPage />} />
 
           {/* Fallback Catch-All */}
           <Route path="*" element={<Navigate to="/" replace />} />

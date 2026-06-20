@@ -228,7 +228,7 @@ export const AdminDashboard = () => {
   });
   const [editingBlock, setEditingBlock] = useState(null);
   const [schoolInfo, setSchoolInfo] = useState({
-    name: "Shree H.S. Model Inter College",
+    name: "P.S ACADEMY",
     address: "100 Education Blvd, Academic Valley, CA 90210",
     email: "admissions@shreehs-college.edu",
   });
@@ -264,11 +264,12 @@ export const AdminDashboard = () => {
   const [cashAmount, setCashAmount] = useState("");
   const [cashMessage, setCashMessage] = useState("");
 
-  const [selectedStudentForBreakdown, setSelectedStudentForBreakdown] = useState("");
+  const [selectedStudentForBreakdown, setSelectedStudentForBreakdown] =
+    useState("");
   const [breakdownForm, setBreakdownForm] = useState({
     monthlyTuition: "",
     yearlyTerm: "",
-    extraCharges: ""
+    extraCharges: "",
   });
 
   // Teacher Salary Control states
@@ -276,7 +277,7 @@ export const AdminDashboard = () => {
   const [salaryControlForm, setSalaryControlForm] = useState({
     base: "",
     allowances: "",
-    deductions: ""
+    deductions: "",
   });
   const [noticeForm, setNoticeForm] = useState({
     title: "",
@@ -364,7 +365,8 @@ export const AdminDashboard = () => {
 
       // Load timetable for selected class
       const key = `${timetableClass}_${timetableSection}`;
-      const tt = mockDb.timetables?.[key] ?? mockDb.timetables?.[timetableClass] ?? [];
+      const tt =
+        mockDb.timetables?.[key] ?? mockDb.timetables?.[timetableClass] ?? [];
       setClassTimetable(tt);
 
       // ─── FIX 9: Load persisted exams from localStorage ───────────────────
@@ -383,7 +385,7 @@ export const AdminDashboard = () => {
       const bd = s.fees.breakdown || {
         monthlyTuition: 3000,
         yearlyTerm: 10000,
-        extraCharges: 4000
+        extraCharges: 4000,
       };
       const monthlyTotal = (Number(bd.monthlyTuition) || 3000) * 12;
       const yearlyTotal = Number(bd.yearlyTerm) || 10000;
@@ -397,7 +399,7 @@ export const AdminDashboard = () => {
           breakdown: bd,
           total: computedTotal,
           balance: Math.max(0, computedTotal - Number(s.fees.paid || 0)),
-        }
+        },
       };
     });
 
@@ -429,10 +431,7 @@ export const AdminDashboard = () => {
       teachersOnLeave: `${absent}/${tchs.length || 0}`,
       collectedFees: `₹${collected.toLocaleString("en-IN")}`,
       pendingFees: `₹${pending.toLocaleString("en-IN")}`,
-      alertsCount:
-        lvs.filter((l) => l.status === "Pending").length +
-        cons.filter((c) => c.status === "Pending").length +
-        2,
+      alertsCount: lvs.filter((l) => l.status === "Pending").length + 2,
     });
   };
 
@@ -444,7 +443,9 @@ export const AdminDashboard = () => {
   useEffect(() => {
     const mockDb = getMockDb();
     const key = `${timetableClass}_${timetableSection}`;
-    setClassTimetable(mockDb.timetables?.[key] ?? mockDb.timetables?.[timetableClass] ?? []);
+    setClassTimetable(
+      mockDb.timetables?.[key] ?? mockDb.timetables?.[timetableClass] ?? [],
+    );
   }, [timetableClass, timetableSection]);
 
   const triggerNotification = (message, type = "success") => {
@@ -525,10 +526,7 @@ export const AdminDashboard = () => {
     let userUid = sId;
     let authResult = null;
     try {
-      authResult = await adminCreateUser(
-        studentForm.email,
-        password,
-      );
+      authResult = await adminCreateUser(studentForm.email, password);
       if (authResult?.user?.uid) {
         userUid = authResult.user.uid;
         authCreated = true;
@@ -702,10 +700,7 @@ export const AdminDashboard = () => {
     let userUid = tId;
     let authResult = null;
     try {
-      authResult = await adminCreateUser(
-        teacherForm.email,
-        password,
-      );
+      authResult = await adminCreateUser(teacherForm.email, password);
       if (authResult?.user?.uid) {
         userUid = authResult.user.uid;
         authCreated = true;
@@ -798,7 +793,7 @@ export const AdminDashboard = () => {
         await setDoc(doc(db, "teachers", teacherId), mockDb.teachers[idx]);
       } catch (err) {
         import("../utils/logger").then(({ warn }) =>
-          warn("Failed to update teacher class/section in Firebase", err)
+          warn("Failed to update teacher class/section in Firebase", err),
         );
       }
       triggerNotification(`Teacher assignment updated!`);
@@ -853,7 +848,11 @@ export const AdminDashboard = () => {
       (c) =>
         c.day === timetableForm.day &&
         c.period === timetableForm.period &&
-        !(editingBlock && editingBlock.day === c.day && editingBlock.period === c.period)
+        !(
+          editingBlock &&
+          editingBlock.day === c.day &&
+          editingBlock.period === c.period
+        ),
     );
     if (conflictFound) {
       triggerNotification(
@@ -870,17 +869,21 @@ export const AdminDashboard = () => {
       const timetables = mockDb.timetables || {};
       const currentClassKey = `${timetableForm.className}_${timetableForm.section}`;
       for (const [classKey, schedule] of Object.entries(timetables)) {
-        if (classKey === currentClassKey || classKey === timetableForm.className) continue;
+        if (
+          classKey === currentClassKey ||
+          classKey === timetableForm.className
+        )
+          continue;
         const conflict = schedule.find(
           (c) =>
             c.day === timetableForm.day &&
             c.period === timetableForm.period &&
-            c.teacherName === assignedTeacher
+            c.teacherName === assignedTeacher,
         );
         if (conflict) {
           triggerNotification(
             `Teacher Conflict! ${assignedTeacher} is already teaching ${classKey} on ${timetableForm.day} during ${timetableForm.period} period.`,
-            "error"
+            "error",
           );
           return;
         }
@@ -888,7 +891,11 @@ export const AdminDashboard = () => {
     }
 
     const slotNum = periodSlots[timetableForm.period] || 1;
-    const computedTime = getPeriodTime(timetableForm.period, timetableStartHour, timetablePeriodDuration);
+    const computedTime = getPeriodTime(
+      timetableForm.period,
+      timetableStartHour,
+      timetablePeriodDuration,
+    );
 
     const newPeriod = {
       day: timetableForm.day,
@@ -903,7 +910,8 @@ export const AdminDashboard = () => {
     let baseTimetable = classTimetable;
     if (editingBlock) {
       baseTimetable = classTimetable.filter(
-        (c) => !(c.day === editingBlock.day && c.period === editingBlock.period)
+        (c) =>
+          !(c.day === editingBlock.day && c.period === editingBlock.period),
       );
     }
 
@@ -936,7 +944,13 @@ export const AdminDashboard = () => {
       return;
     }
 
-    const otherDays = ["Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const otherDays = [
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+    ];
     const mockDb = getMockDb();
     const timetables = mockDb.timetables || {};
     const currentKey = `${timetableClass}_${timetableSection}`;
@@ -947,17 +961,18 @@ export const AdminDashboard = () => {
         const assignedTeacher = mp.teacherName;
         if (assignedTeacher && assignedTeacher !== "Not Assigned") {
           for (const [classKey, schedule] of Object.entries(timetables)) {
-            if (classKey === currentKey || classKey === timetableClass) continue;
+            if (classKey === currentKey || classKey === timetableClass)
+              continue;
             const conflict = schedule.find(
               (c) =>
                 c.day === day &&
                 c.period === mp.period &&
-                c.teacherName === assignedTeacher
+                c.teacherName === assignedTeacher,
             );
             if (conflict) {
               triggerNotification(
                 `Teacher Conflict! ${assignedTeacher} is already teaching ${classKey} on ${day} during ${mp.period} period. Copy aborted.`,
-                "error"
+                "error",
               );
               return;
             }
@@ -979,7 +994,11 @@ export const AdminDashboard = () => {
 
     otherDays.forEach((day) => {
       mondayPeriods.forEach((mp) => {
-        const computedTime = getPeriodTime(mp.period, timetableStartHour, timetablePeriodDuration);
+        const computedTime = getPeriodTime(
+          mp.period,
+          timetableStartHour,
+          timetablePeriodDuration,
+        );
         updated.push({
           ...mp,
           day: day,
@@ -1000,12 +1019,14 @@ export const AdminDashboard = () => {
     mockDb.timetables[timetableClass] = updated;
     saveMockDb(mockDb);
 
-    triggerNotification("Monday's schedule successfully copied to Tuesday - Saturday!");
+    triggerNotification(
+      "Monday's schedule successfully copied to Tuesday - Saturday!",
+    );
   };
 
   const handleDeleteTimetablePeriod = (day, periodSlot) => {
     const updated = classTimetable.filter(
-      (c) => !(c.day === day && c.period === periodSlot)
+      (c) => !(c.day === day && c.period === periodSlot),
     );
     setClassTimetable(updated);
     const mockDb = getMockDb();
@@ -1037,7 +1058,9 @@ export const AdminDashboard = () => {
     studentId,
   ) => {
     const mockDb = getMockDb();
-    const pIdx = (mockDb.feePaymentRequests || []).findIndex((p) => p.id === reqId);
+    const pIdx = (mockDb.feePaymentRequests || []).findIndex(
+      (p) => p.id === reqId,
+    );
     if (pIdx > -1) {
       mockDb.feePaymentRequests[pIdx].status = decision;
       mockDb.feePaymentRequests[pIdx].processedAt = new Date().toISOString();
@@ -1064,7 +1087,10 @@ export const AdminDashboard = () => {
             fees: student.fees,
           });
         } catch (fbErr) {
-          console.warn("Failed to sync student fees update to Firestore:", fbErr);
+          console.warn(
+            "Failed to sync student fees update to Firestore:",
+            fbErr,
+          );
         }
       }
     } else {
@@ -1079,7 +1105,10 @@ export const AdminDashboard = () => {
         processedBy: userData?.name || "Admin",
       });
     } catch (fbErr) {
-      console.warn("Failed to sync payment request status to Firestore:", fbErr);
+      console.warn(
+        "Failed to sync payment request status to Firestore:",
+        fbErr,
+      );
     }
 
     triggerNotification(`Payment request ${decision}.`);
@@ -1172,7 +1201,9 @@ export const AdminDashboard = () => {
     }
 
     const mockDb = getMockDb();
-    const student = mockDb.students.find((s) => s.id === selectedStudentForCash);
+    const student = mockDb.students.find(
+      (s) => s.id === selectedStudentForCash,
+    );
     if (!student) {
       triggerNotification("Student not found.", "error");
       return;
@@ -1211,7 +1242,9 @@ export const AdminDashboard = () => {
       console.error("Failed to sync direct cash payment to Firestore:", err);
     }
 
-    triggerNotification(`Cash payment of ₹${amt.toLocaleString()} recorded for ${student.name}!`);
+    triggerNotification(
+      `Cash payment of ₹${amt.toLocaleString()} recorded for ${student.name}!`,
+    );
     setCashAmount("");
     setCashMessage("");
     setSelectedStudentForCash("");
@@ -1230,18 +1263,23 @@ export const AdminDashboard = () => {
     const eCharges = Number(breakdownForm.extraCharges) || 0;
 
     const mockDb = getMockDb();
-    const sIdx = mockDb.students.findIndex((s) => s.id === selectedStudentForBreakdown);
+    const sIdx = mockDb.students.findIndex(
+      (s) => s.id === selectedStudentForBreakdown,
+    );
     if (sIdx > -1) {
       const student = mockDb.students[sIdx];
       student.fees.breakdown = {
         monthlyTuition: mTuition,
         yearlyTerm: yTerm,
-        extraCharges: eCharges
+        extraCharges: eCharges,
       };
 
-      const computedTotal = (mTuition * 12) + yTerm + eCharges;
+      const computedTotal = mTuition * 12 + yTerm + eCharges;
       student.fees.total = computedTotal;
-      student.fees.balance = Math.max(0, computedTotal - Number(student.fees.paid || 0));
+      student.fees.balance = Math.max(
+        0,
+        computedTotal - Number(student.fees.paid || 0),
+      );
 
       saveMockDb(mockDb);
 
@@ -1250,20 +1288,39 @@ export const AdminDashboard = () => {
           fees: student.fees,
         });
       } catch (err) {
-        console.error("Failed to sync student fee breakdown to Firestore:", err);
+        console.error(
+          "Failed to sync student fee breakdown to Firestore:",
+          err,
+        );
       }
 
-      triggerNotification(`Fee breakdown updated successfully for ${student.name}!`);
+      triggerNotification(
+        `Fee breakdown updated successfully for ${student.name}!`,
+      );
       setSelectedStudentForBreakdown("");
-      setBreakdownForm({ monthlyTuition: "", yearlyTerm: "", extraCharges: "" });
+      setBreakdownForm({
+        monthlyTuition: "",
+        yearlyTerm: "",
+        extraCharges: "",
+      });
       fetchData();
     }
   };
 
   const handleDisburseCustomSalary = async (teacher) => {
-    const basePay = Number(salaryControlForm.base) || teacher.salaryDetails?.base || teacher.salary || 40000;
-    const allowances = Number(salaryControlForm.allowances) || teacher.salaryDetails?.allowances || 0;
-    const deductions = Number(salaryControlForm.deductions) || teacher.salaryDetails?.deductions || 0;
+    const basePay =
+      Number(salaryControlForm.base) ||
+      teacher.salaryDetails?.base ||
+      teacher.salary ||
+      40000;
+    const allowances =
+      Number(salaryControlForm.allowances) ||
+      teacher.salaryDetails?.allowances ||
+      0;
+    const deductions =
+      Number(salaryControlForm.deductions) ||
+      teacher.salaryDetails?.deductions ||
+      0;
     const netPay = basePay + allowances - deductions;
 
     const slip = {
@@ -1285,7 +1342,7 @@ export const AdminDashboard = () => {
         base: basePay,
         allowances,
         deductions,
-        net: netPay
+        net: netPay,
       };
       mockDb.teachers[tIdx].salary = netPay;
     }
@@ -1299,14 +1356,16 @@ export const AdminDashboard = () => {
           base: basePay,
           allowances,
           deductions,
-          net: netPay
-        }
+          net: netPay,
+        },
       });
     } catch (err) {
       console.error("Failed to disburse custom salary in Firestore:", err);
     }
 
-    triggerNotification(`Custom Salary disbursed to ${teacher.name}! Net: ₹${netPay}`);
+    triggerNotification(
+      `Custom Salary disbursed to ${teacher.name}! Net: ₹${netPay}`,
+    );
     setSelectedTeacherForSalary("");
     setSalaryControlForm({ base: "", allowances: "", deductions: "" });
     fetchData();
@@ -1341,8 +1400,12 @@ export const AdminDashboard = () => {
       .toLowerCase()
       .includes(term);
     const phoneMatch =
-      String(s.fatherMobile || "").toLowerCase().includes(term) ||
-      String(s.motherMobile || "").toLowerCase().includes(term);
+      String(s.fatherMobile || "")
+        .toLowerCase()
+        .includes(term) ||
+      String(s.motherMobile || "")
+        .toLowerCase()
+        .includes(term);
     const classMatch = classFilter === "All" || s.class === classFilter;
     return (nameMatch || rollMatch || phoneMatch) && classMatch;
   });
@@ -1404,10 +1467,11 @@ export const AdminDashboard = () => {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === tab.id
+                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    activeTab === tab.id
                       ? "bg-indigo-600 text-white shadow-lg"
                       : "text-slate-400 hover:text-white hover:bg-slate-800/40"
-                    }`}
+                  }`}
                 >
                   <Icon className="w-4 h-4" /> {tab.label}
                 </button>
@@ -1459,10 +1523,11 @@ export const AdminDashboard = () => {
 
         {notification.message && (
           <div
-            className={`mx-8 mt-6 p-4 rounded-xl border text-xs font-bold flex items-center gap-2 ${notification.type === "error"
+            className={`mx-8 mt-6 p-4 rounded-xl border text-xs font-bold flex items-center gap-2 ${
+              notification.type === "error"
                 ? "bg-rose-50 border-rose-100 text-rose-600"
                 : "bg-emerald-50 border-emerald-100 text-emerald-600"
-              }`}
+            }`}
           >
             <CheckCircle className="w-4 h-4" />
             <span>{notification.message}</span>
@@ -1626,10 +1691,10 @@ export const AdminDashboard = () => {
                       ))}
                     {leaveRequests.filter((l) => l.status === "Pending")
                       .length === 0 && (
-                        <p className="text-center py-6 text-slate-400 text-xs">
-                          No pending requests.
-                        </p>
-                      )}
+                      <p className="text-center py-6 text-slate-400 text-xs">
+                        No pending requests.
+                      </p>
+                    )}
                   </div>
                 </div>
                 <button
@@ -1918,7 +1983,9 @@ export const AdminDashboard = () => {
                     >
                       <div className="flex justify-between items-start">
                         <div>
-                          <h4 className="font-extrabold text-slate-800 text-sm">{student.name}</h4>
+                          <h4 className="font-extrabold text-slate-800 text-sm">
+                            {student.name}
+                          </h4>
                           <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider mt-0.5">
                             Roll No: {student.rollNo}
                           </span>
@@ -1929,11 +1996,19 @@ export const AdminDashboard = () => {
                       </div>
                       <div className="mt-4 pt-3 border-t border-slate-100 flex justify-between items-center text-xs">
                         <span className="text-slate-400">
-                          Attendance: <span className="font-bold text-emerald-600">{student.overallAttendance || 100}%</span>
+                          Attendance:{" "}
+                          <span className="font-bold text-emerald-600">
+                            {student.overallAttendance || 100}%
+                          </span>
                         </span>
                         <span className="text-slate-400">
-                          Fees: <span className={`font-bold ${student.fees?.balance === 0 ? "text-emerald-500" : "text-rose-500"}`}>
-                            {student.fees?.balance === 0 ? "Settled" : `₹${student.fees?.balance?.toLocaleString()}`}
+                          Fees:{" "}
+                          <span
+                            className={`font-bold ${student.fees?.balance === 0 ? "text-emerald-500" : "text-rose-500"}`}
+                          >
+                            {student.fees?.balance === 0
+                              ? "Settled"
+                              : `₹${student.fees?.balance?.toLocaleString()}`}
                           </span>
                         </span>
                       </div>
@@ -1954,7 +2029,8 @@ export const AdminDashboard = () => {
                     Student Personal Profiles Directory
                   </h3>
                   <p className="text-xs text-slate-400 mt-1">
-                    View and manage personal information of all registered pupils.
+                    View and manage personal information of all registered
+                    pupils.
                   </p>
                 </div>
                 <div className="flex gap-3 w-full sm:w-auto">
@@ -1984,7 +2060,8 @@ export const AdminDashboard = () => {
               </div>
 
               {students.filter((s) => {
-                const classMatch = dirClassFilter === "All" || s.class === dirClassFilter;
+                const classMatch =
+                  dirClassFilter === "All" || s.class === dirClassFilter;
                 const searchMatch =
                   dirSearchTerm === "" ||
                   s.name.toLowerCase().includes(dirSearchTerm.toLowerCase()) ||
@@ -2012,52 +2089,85 @@ export const AdminDashboard = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white text-slate-600 font-medium">
-                      {students.filter((s) => {
-                        const classMatch = dirClassFilter === "All" || s.class === dirClassFilter;
-                        const searchMatch =
-                          dirSearchTerm === "" ||
-                          s.name.toLowerCase().includes(dirSearchTerm.toLowerCase()) ||
-                          (s.rollNo && String(s.rollNo).includes(dirSearchTerm)) ||
-                          (s.aadharNo && String(s.aadharNo).includes(dirSearchTerm));
-                        return classMatch && searchMatch;
-                      }).map((s) => (
-                        <tr
-                          key={s.id}
-                          className="hover:bg-slate-50/70 transition-colors cursor-pointer"
-                          onClick={() => setSelectedStudentForModal(s)}
-                          title="Click to view full scorecard and statistics"
-                        >
-                          <td className="p-3 font-mono font-bold text-slate-800">{s.rollNo || "-"}</td>
-                          <td className="p-3">
-                            <span className="font-extrabold text-slate-800 block text-sm">{s.name}</span>
-                            <span className="text-[10px] text-slate-400 block">{s.email}</span>
-                          </td>
-                          <td className="p-3">
-                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold text-[10px]">
-                              {s.class} - {s.section}
-                            </span>
-                          </td>
-                          <td className="p-3">
-                            <span className="block">{s.dob || "-"}</span>
-                            <span className="text-[10px] text-slate-400 block">{s.gender || "-"}</span>
-                          </td>
-                          <td className="p-3 font-mono">{s.aadharNo || "-"}</td>
-                          <td className="p-3">
-                            <span className="block font-bold text-slate-700">{s.fatherName || "-"}</span>
-                            <span className="text-[10px] text-slate-400 block font-mono">{s.fatherMobile || "-"}</span>
-                          </td>
-                          <td className="p-3">
-                            <span className="block font-bold text-slate-700">{s.motherName || "-"}</span>
-                            <span className="text-[10px] text-slate-400 block font-mono">{s.motherMobile || "-"}</span>
-                          </td>
-                          <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-black ${s.bloodGroup ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-400"}`}>
-                              {s.bloodGroup || "N/A"}
-                            </span>
-                          </td>
-                          <td className="p-3 max-w-[150px] truncate" title={s.address}>{s.address || "-"}</td>
-                        </tr>
-                      ))}
+                      {students
+                        .filter((s) => {
+                          const classMatch =
+                            dirClassFilter === "All" ||
+                            s.class === dirClassFilter;
+                          const searchMatch =
+                            dirSearchTerm === "" ||
+                            s.name
+                              .toLowerCase()
+                              .includes(dirSearchTerm.toLowerCase()) ||
+                            (s.rollNo &&
+                              String(s.rollNo).includes(dirSearchTerm)) ||
+                            (s.aadharNo &&
+                              String(s.aadharNo).includes(dirSearchTerm));
+                          return classMatch && searchMatch;
+                        })
+                        .map((s) => (
+                          <tr
+                            key={s.id}
+                            className="hover:bg-slate-50/70 transition-colors cursor-pointer"
+                            onClick={() => setSelectedStudentForModal(s)}
+                            title="Click to view full scorecard and statistics"
+                          >
+                            <td className="p-3 font-mono font-bold text-slate-800">
+                              {s.rollNo || "-"}
+                            </td>
+                            <td className="p-3">
+                              <span className="font-extrabold text-slate-800 block text-sm">
+                                {s.name}
+                              </span>
+                              <span className="text-[10px] text-slate-400 block">
+                                {s.email}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 rounded font-bold text-[10px]">
+                                {s.class} - {s.section}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="block">{s.dob || "-"}</span>
+                              <span className="text-[10px] text-slate-400 block">
+                                {s.gender || "-"}
+                              </span>
+                            </td>
+                            <td className="p-3 font-mono">
+                              {s.aadharNo || "-"}
+                            </td>
+                            <td className="p-3">
+                              <span className="block font-bold text-slate-700">
+                                {s.fatherName || "-"}
+                              </span>
+                              <span className="text-[10px] text-slate-400 block font-mono">
+                                {s.fatherMobile || "-"}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span className="block font-bold text-slate-700">
+                                {s.motherName || "-"}
+                              </span>
+                              <span className="text-[10px] text-slate-400 block font-mono">
+                                {s.motherMobile || "-"}
+                              </span>
+                            </td>
+                            <td className="p-3">
+                              <span
+                                className={`px-2 py-0.5 rounded text-[10px] font-black ${s.bloodGroup ? "bg-rose-50 text-rose-600" : "bg-slate-100 text-slate-400"}`}
+                              >
+                                {s.bloodGroup || "N/A"}
+                              </span>
+                            </td>
+                            <td
+                              className="p-3 max-w-[150px] truncate"
+                              title={s.address}
+                            >
+                              {s.address || "-"}
+                            </td>
+                          </tr>
+                        ))}
                     </tbody>
                   </table>
                 </div>
@@ -2229,26 +2339,46 @@ export const AdminDashboard = () => {
                           </span>
                         </div>
                         <div className="flex gap-2 items-center">
-                          <span className="text-[10px] text-slate-400 font-bold">Class:</span>
+                          <span className="text-[10px] text-slate-400 font-bold">
+                            Class:
+                          </span>
                           <select
                             value={t.class || ""}
-                            onChange={(e) => handleTeacherClassSectionChange(t.id, "class", e.target.value)}
+                            onChange={(e) =>
+                              handleTeacherClassSectionChange(
+                                t.id,
+                                "class",
+                                e.target.value,
+                              )
+                            }
                             className="border border-slate-200 rounded px-2 py-0.5 bg-slate-50 text-[10px]"
                           >
                             <option value="">None</option>
                             {ALL_CLASSES.map((c) => (
-                              <option key={c} value={c}>{c}</option>
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
                             ))}
                           </select>
-                          <span className="text-[10px] text-slate-400 font-bold">Sec:</span>
+                          <span className="text-[10px] text-slate-400 font-bold">
+                            Sec:
+                          </span>
                           <select
                             value={t.section || ""}
-                            onChange={(e) => handleTeacherClassSectionChange(t.id, "section", e.target.value)}
+                            onChange={(e) =>
+                              handleTeacherClassSectionChange(
+                                t.id,
+                                "section",
+                                e.target.value,
+                              )
+                            }
                             className="border border-slate-200 rounded px-2 py-0.5 bg-slate-50 text-[10px]"
                           >
                             <option value="">None</option>
                             {SECTIONS.map((s) => (
-                              <option key={s} value={s}>{s}</option>
+                              <option key={s} value={s}>
+                                {s}
+                              </option>
                             ))}
                           </select>
                         </div>
@@ -2331,14 +2461,15 @@ export const AdminDashboard = () => {
                                           opt,
                                         )
                                       }
-                                      className={`px-2 py-1 text-[9px] font-bold rounded border transition-all ${teacher.status === opt
+                                      className={`px-2 py-1 text-[9px] font-bold rounded border transition-all ${
+                                        teacher.status === opt
                                           ? opt === "Present"
                                             ? "bg-emerald-50 border-emerald-200 text-emerald-600"
                                             : opt === "Absent"
                                               ? "bg-rose-50 border-rose-200 text-rose-600"
                                               : "bg-amber-50 border-amber-200 text-amber-600"
                                           : "border-slate-200 text-slate-400 hover:bg-slate-50"
-                                        }`}
+                                      }`}
                                     >
                                       {opt}
                                     </button>
@@ -2397,10 +2528,10 @@ export const AdminDashboard = () => {
                       ))}
                     {students.filter((s) => (s.overallAttendance || 90) < 75)
                       .length === 0 && (
-                        <p className="text-center py-8 text-slate-400 text-xs">
-                          No critically low attendance records.
-                        </p>
-                      )}
+                      <p className="text-center py-8 text-slate-400 text-xs">
+                        No critically low attendance records.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -2434,10 +2565,11 @@ export const AdminDashboard = () => {
                           (day, i) => (
                             <div
                               key={i}
-                              className={`p-2 rounded-lg text-center text-[10px] font-bold border ${day.status === "Present"
+                              className={`p-2 rounded-lg text-center text-[10px] font-bold border ${
+                                day.status === "Present"
                                   ? "bg-emerald-50 border-emerald-100 text-emerald-600"
                                   : "bg-rose-50 border-rose-100 text-rose-600"
-                                }`}
+                              }`}
                             >
                               <div>{day.date}</div>
                               <div className="text-[8px] uppercase mt-0.5">
@@ -2505,15 +2637,15 @@ export const AdminDashboard = () => {
                         ))}
                       {students.filter((s) => (s.fees?.balance || 0) > 0)
                         .length === 0 && (
-                          <tr>
-                            <td
-                              colSpan="5"
-                              className="py-8 text-center text-slate-400"
-                            >
-                              All accounts are cleared.
-                            </td>
-                          </tr>
-                        )}
+                        <tr>
+                          <td
+                            colSpan="5"
+                            className="py-8 text-center text-slate-400"
+                          >
+                            All accounts are cleared.
+                          </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -2528,23 +2660,30 @@ export const AdminDashboard = () => {
                       Record Cash Payment Collection
                     </h3>
                     <p className="text-xs text-slate-400 mb-6">
-                      Instantly record cash paid directly to the office. This updates the student's balance.
+                      Instantly record cash paid directly to the office. This
+                      updates the student's balance.
                     </p>
-                    <form onSubmit={handleRecordCashPayment} className="space-y-4">
+                    <form
+                      onSubmit={handleRecordCashPayment}
+                      className="space-y-4"
+                    >
                       <div>
                         <label className="block text-xs font-semibold text-slate-500 mb-2">
                           Select Student
                         </label>
                         <select
                           value={selectedStudentForCash}
-                          onChange={(e) => setSelectedStudentForCash(e.target.value)}
+                          onChange={(e) =>
+                            setSelectedStudentForCash(e.target.value)
+                          }
                           required
                           className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-xs bg-slate-50 outline-none"
                         >
                           <option value="">Choose student...</option>
                           {students.map((s) => (
                             <option key={s.id} value={s.id}>
-                              {s.name} (Roll: {s.rollNo} | {s.class}-{s.section} | Bal: ₹{s.fees?.balance?.toLocaleString()})
+                              {s.name} (Roll: {s.rollNo} | {s.class}-{s.section}{" "}
+                              | Bal: ₹{s.fees?.balance?.toLocaleString()})
                             </option>
                           ))}
                         </select>
@@ -2596,7 +2735,8 @@ export const AdminDashboard = () => {
                       Adjust Student Fee Breakdowns
                     </h3>
                     <p className="text-xs text-slate-400 mb-6">
-                      Customize tuition, term fees, or misc charges. Total fee updates automatically.
+                      Customize tuition, term fees, or misc charges. Total fee
+                      updates automatically.
                     </p>
                     <div className="space-y-4">
                       <div>
@@ -2611,9 +2751,13 @@ export const AdminDashboard = () => {
                             const matched = students.find((s) => s.id === val);
                             if (matched) {
                               setBreakdownForm({
-                                monthlyTuition: matched.fees?.breakdown?.monthlyTuition || 3000,
-                                yearlyTerm: matched.fees?.breakdown?.yearlyTerm || 10000,
-                                extraCharges: matched.fees?.breakdown?.extraCharges || 4000,
+                                monthlyTuition:
+                                  matched.fees?.breakdown?.monthlyTuition ||
+                                  3000,
+                                yearlyTerm:
+                                  matched.fees?.breakdown?.yearlyTerm || 10000,
+                                extraCharges:
+                                  matched.fees?.breakdown?.extraCharges || 4000,
                               });
                             }
                           }}
@@ -2629,34 +2773,58 @@ export const AdminDashboard = () => {
                       </div>
 
                       {selectedStudentForBreakdown && (
-                        <form onSubmit={handleUpdateBreakdown} className="space-y-4 animate-fade-in">
+                        <form
+                          onSubmit={handleUpdateBreakdown}
+                          className="space-y-4 animate-fade-in"
+                        >
                           <div className="grid grid-cols-3 gap-2">
                             <div>
-                              <span className="text-[10px] text-slate-400 block mb-1">Monthly Tuition (₹)</span>
+                              <span className="text-[10px] text-slate-400 block mb-1">
+                                Monthly Tuition (₹)
+                              </span>
                               <input
                                 type="number"
                                 value={breakdownForm.monthlyTuition}
-                                onChange={(e) => setBreakdownForm({ ...breakdownForm, monthlyTuition: e.target.value })}
+                                onChange={(e) =>
+                                  setBreakdownForm({
+                                    ...breakdownForm,
+                                    monthlyTuition: e.target.value,
+                                  })
+                                }
                                 className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
                                 required
                               />
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block mb-1">Yearly Term (₹)</span>
+                              <span className="text-[10px] text-slate-400 block mb-1">
+                                Yearly Term (₹)
+                              </span>
                               <input
                                 type="number"
                                 value={breakdownForm.yearlyTerm}
-                                onChange={(e) => setBreakdownForm({ ...breakdownForm, yearlyTerm: e.target.value })}
+                                onChange={(e) =>
+                                  setBreakdownForm({
+                                    ...breakdownForm,
+                                    yearlyTerm: e.target.value,
+                                  })
+                                }
                                 className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
                                 required
                               />
                             </div>
                             <div>
-                              <span className="text-[10px] text-slate-400 block mb-1">Extra Charges (₹)</span>
+                              <span className="text-[10px] text-slate-400 block mb-1">
+                                Extra Charges (₹)
+                              </span>
                               <input
                                 type="number"
                                 value={breakdownForm.extraCharges}
-                                onChange={(e) => setBreakdownForm({ ...breakdownForm, extraCharges: e.target.value })}
+                                onChange={(e) =>
+                                  setBreakdownForm({
+                                    ...breakdownForm,
+                                    extraCharges: e.target.value,
+                                  })
+                                }
                                 className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
                                 required
                               />
@@ -2664,7 +2832,15 @@ export const AdminDashboard = () => {
                           </div>
 
                           <div className="p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-xs font-semibold text-indigo-700">
-                            New Total Fees obligation will be: <span className="font-bold">₹{((Number(breakdownForm.monthlyTuition) * 12) + Number(breakdownForm.yearlyTerm) + Number(breakdownForm.extraCharges)).toLocaleString()}</span>
+                            New Total Fees obligation will be:{" "}
+                            <span className="font-bold">
+                              ₹
+                              {(
+                                Number(breakdownForm.monthlyTuition) * 12 +
+                                Number(breakdownForm.yearlyTerm) +
+                                Number(breakdownForm.extraCharges)
+                              ).toLocaleString()}
+                            </span>
                           </div>
 
                           <button
@@ -2711,9 +2887,16 @@ export const AdminDashboard = () => {
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-600">
                         {teachers.map((teacher) => {
-                          const basePay = teacher.salaryDetails?.base || teacher.salary || 40000;
-                          const allowances = teacher.salaryDetails?.allowances || 0;
-                          const deductions = teacher.status === "Absent" ? Math.round(basePay / 30) : (teacher.salaryDetails?.deductions || 0);
+                          const basePay =
+                            teacher.salaryDetails?.base ||
+                            teacher.salary ||
+                            40000;
+                          const allowances =
+                            teacher.salaryDetails?.allowances || 0;
+                          const deductions =
+                            teacher.status === "Absent"
+                              ? Math.round(basePay / 30)
+                              : teacher.salaryDetails?.deductions || 0;
                           const netPay = basePay + allowances - deductions;
                           return (
                             <tr key={teacher.id}>
@@ -2739,7 +2922,7 @@ export const AdminDashboard = () => {
                                     setSalaryControlForm({
                                       base: basePay,
                                       allowances: allowances,
-                                      deductions: deductions
+                                      deductions: deductions,
                                     });
                                   }}
                                   className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-650 font-bold rounded-lg text-[10px] transition-all"
@@ -2762,7 +2945,8 @@ export const AdminDashboard = () => {
                   Configure & Disburse Salary
                 </h3>
                 <p className="text-xs text-slate-400 mb-6">
-                  Select a teacher from the roster to customize base pay, allowances, and deductions before disbursing.
+                  Select a teacher from the roster to customize base pay,
+                  allowances, and deductions before disbursing.
                 </p>
 
                 <div className="space-y-4">
@@ -2778,9 +2962,19 @@ export const AdminDashboard = () => {
                         const matched = teachers.find((t) => t.id === val);
                         if (matched) {
                           setSalaryControlForm({
-                            base: matched.salaryDetails?.base || matched.salary || 40000,
+                            base:
+                              matched.salaryDetails?.base ||
+                              matched.salary ||
+                              40000,
                             allowances: matched.salaryDetails?.allowances || 0,
-                            deductions: matched.status === "Absent" ? Math.round((matched.salaryDetails?.base || matched.salary || 40000) / 30) : (matched.salaryDetails?.deductions || 0),
+                            deductions:
+                              matched.status === "Absent"
+                                ? Math.round(
+                                    (matched.salaryDetails?.base ||
+                                      matched.salary ||
+                                      40000) / 30,
+                                  )
+                                : matched.salaryDetails?.deductions || 0,
                           });
                         }
                       }}
@@ -2795,62 +2989,86 @@ export const AdminDashboard = () => {
                     </select>
                   </div>
 
-                  {selectedTeacherForSalary && (() => {
-                    const teacher = teachers.find((t) => t.id === selectedTeacherForSalary);
-                    if (!teacher) return null;
-                    const calculatedNet = Number(salaryControlForm.base || 0) + Number(salaryControlForm.allowances || 0) - Number(salaryControlForm.deductions || 0);
-                    return (
-                      <div className="space-y-4 animate-fade-in">
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 mb-2">
-                            Base Pay (₹)
-                          </label>
-                          <input
-                            type="number"
-                            value={salaryControlForm.base}
-                            onChange={(e) => setSalaryControlForm({ ...salaryControlForm, base: e.target.value })}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 mb-2">
-                            Allowances (₹)
-                          </label>
-                          <input
-                            type="number"
-                            value={salaryControlForm.allowances}
-                            onChange={(e) => setSalaryControlForm({ ...salaryControlForm, allowances: e.target.value })}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs font-semibold text-slate-500 mb-2">
-                            Deductions (₹)
-                          </label>
-                          <input
-                            type="number"
-                            value={salaryControlForm.deductions}
-                            onChange={(e) => setSalaryControlForm({ ...salaryControlForm, deductions: e.target.value })}
-                            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
-                            required
-                          />
-                        </div>
+                  {selectedTeacherForSalary &&
+                    (() => {
+                      const teacher = teachers.find(
+                        (t) => t.id === selectedTeacherForSalary,
+                      );
+                      if (!teacher) return null;
+                      const calculatedNet =
+                        Number(salaryControlForm.base || 0) +
+                        Number(salaryControlForm.allowances || 0) -
+                        Number(salaryControlForm.deductions || 0);
+                      return (
+                        <div className="space-y-4 animate-fade-in">
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-2">
+                              Base Pay (₹)
+                            </label>
+                            <input
+                              type="number"
+                              value={salaryControlForm.base}
+                              onChange={(e) =>
+                                setSalaryControlForm({
+                                  ...salaryControlForm,
+                                  base: e.target.value,
+                                })
+                              }
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-2">
+                              Allowances (₹)
+                            </label>
+                            <input
+                              type="number"
+                              value={salaryControlForm.allowances}
+                              onChange={(e) =>
+                                setSalaryControlForm({
+                                  ...salaryControlForm,
+                                  allowances: e.target.value,
+                                })
+                              }
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-semibold text-slate-500 mb-2">
+                              Deductions (₹)
+                            </label>
+                            <input
+                              type="number"
+                              value={salaryControlForm.deductions}
+                              onChange={(e) =>
+                                setSalaryControlForm({
+                                  ...salaryControlForm,
+                                  deductions: e.target.value,
+                                })
+                              }
+                              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-50 outline-none"
+                              required
+                            />
+                          </div>
 
-                        <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-semibold text-emerald-700">
-                          Disbursement Net Payout: <span className="font-extrabold">₹{calculatedNet.toLocaleString()}</span>
-                        </div>
+                          <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-xs font-semibold text-emerald-700">
+                            Disbursement Net Payout:{" "}
+                            <span className="font-extrabold">
+                              ₹{calculatedNet.toLocaleString()}
+                            </span>
+                          </div>
 
-                        <button
-                          onClick={() => handleDisburseCustomSalary(teacher)}
-                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all"
-                        >
-                          Disburse June Salary
-                        </button>
-                      </div>
-                    );
-                  })()}
+                          <button
+                            onClick={() => handleDisburseCustomSalary(teacher)}
+                            className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-md transition-all"
+                          >
+                            Disburse June Salary
+                          </button>
+                        </div>
+                      );
+                    })()}
                 </div>
               </div>
             </div>
@@ -2967,7 +3185,9 @@ export const AdminDashboard = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm h-fit">
                 <h3 className="text-base font-extrabold text-slate-800 mb-6">
-                  {editingBlock ? "Modify Timetable Block" : "Create Timetable Schedule"}
+                  {editingBlock
+                    ? "Modify Timetable Block"
+                    : "Create Timetable Schedule"}
                 </h3>
                 <div className="mb-6 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-4">
                   <div>
@@ -2985,7 +3205,9 @@ export const AdminDashboard = () => {
                         const mockDb = getMockDb();
                         mockDb.timetableStartHour = val;
                         saveMockDb(mockDb);
-                        triggerNotification(`Timetable start hour updated to ${val}:00!`);
+                        triggerNotification(
+                          `Timetable start hour updated to ${val}:00!`,
+                        );
                       }}
                       className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-bold text-slate-850"
                     />
@@ -3002,7 +3224,9 @@ export const AdminDashboard = () => {
                         const mockDb = getMockDb();
                         mockDb.timetablePeriodDuration = val;
                         saveMockDb(mockDb);
-                        triggerNotification(`Class duration updated to ${val} minutes!`);
+                        triggerNotification(
+                          `Class duration updated to ${val} minutes!`,
+                        );
                       }}
                       className="w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-white font-bold text-slate-850"
                     >
@@ -3152,7 +3376,9 @@ export const AdminDashboard = () => {
                     type="submit"
                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs"
                   >
-                    {editingBlock ? "Update Timetable Block" : "Save Timetable Block"}
+                    {editingBlock
+                      ? "Update Timetable Block"
+                      : "Save Timetable Block"}
                   </button>
                   {editingBlock && (
                     <button
@@ -3176,7 +3402,8 @@ export const AdminDashboard = () => {
               <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 shadow-sm overflow-hidden">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
                   <h3 className="text-base font-extrabold text-slate-800">
-                    Weekly Schedule for {timetableClass} - Section {timetableSection}
+                    Weekly Schedule for {timetableClass} - Section{" "}
+                    {timetableSection}
                   </h3>
                   <button
                     type="button"
@@ -3188,37 +3415,80 @@ export const AdminDashboard = () => {
                 </div>
                 {classTimetable.length === 0 ? (
                   <p className="text-center py-8 text-slate-400 text-xs">
-                    No periods scheduled for {timetableClass} - Section {timetableSection} yet.
+                    No periods scheduled for {timetableClass} - Section{" "}
+                    {timetableSection} yet.
                   </p>
                 ) : (
                   <div className="overflow-x-auto rounded-2xl border border-slate-100 shadow-sm">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-50 border-b border-slate-200 text-slate-700 text-[11px] font-bold uppercase tracking-wider">
-                          <th className="py-4 px-4 font-extrabold text-slate-800 border-r border-slate-200">Day</th>
-                          {["1st", "2nd", "3rd", "4th", "5th", "6th", "7th"].map((p) => {
-                            const timeStr = getPeriodTime(p, timetableStartHour, timetablePeriodDuration);
+                          <th className="py-4 px-4 font-extrabold text-slate-800 border-r border-slate-200">
+                            Day
+                          </th>
+                          {[
+                            "1st",
+                            "2nd",
+                            "3rd",
+                            "4th",
+                            "5th",
+                            "6th",
+                            "7th",
+                          ].map((p) => {
+                            const timeStr = getPeriodTime(
+                              p,
+                              timetableStartHour,
+                              timetablePeriodDuration,
+                            );
                             return (
-                              <th key={p} className="py-4 px-3 text-center border-r border-slate-200 last:border-r-0 min-w-[140px]">
-                                <span className="block text-indigo-650 font-black">{p}</span>
-                                <span className="block text-[9px] text-slate-400 font-normal mt-0.5 normal-case font-mono">{timeStr}</span>
+                              <th
+                                key={p}
+                                className="py-4 px-3 text-center border-r border-slate-200 last:border-r-0 min-w-[140px]"
+                              >
+                                <span className="block text-indigo-650 font-black">
+                                  {p}
+                                </span>
+                                <span className="block text-[9px] text-slate-400 font-normal mt-0.5 normal-case font-mono">
+                                  {timeStr}
+                                </span>
                               </th>
                             );
                           })}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 bg-white">
-                        {["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day) => (
-                          <tr key={day} className="hover:bg-slate-50/60 transition-colors">
+                        {[
+                          "Monday",
+                          "Tuesday",
+                          "Wednesday",
+                          "Thursday",
+                          "Friday",
+                          "Saturday",
+                        ].map((day) => (
+                          <tr
+                            key={day}
+                            className="hover:bg-slate-50/60 transition-colors"
+                          >
                             <td className="py-4 px-4 text-xs font-black text-slate-700 bg-slate-50/40 border-r border-slate-200">
                               {day}
                             </td>
-                            {["1st", "2nd", "3rd", "4th", "5th", "6th", "7th"].map((p) => {
+                            {[
+                              "1st",
+                              "2nd",
+                              "3rd",
+                              "4th",
+                              "5th",
+                              "6th",
+                              "7th",
+                            ].map((p) => {
                               const slotData = classTimetable.find(
-                                (t) => t.day === day && t.period === p
+                                (t) => t.day === day && t.period === p,
                               );
                               return (
-                                <td key={p} className="p-2 border-r border-slate-100 last:border-r-0 text-center vertical-align-middle">
+                                <td
+                                  key={p}
+                                  className="p-2 border-r border-slate-100 last:border-r-0 text-center vertical-align-middle"
+                                >
                                   {slotData ? (
                                     <div
                                       onClick={() => {
@@ -3229,20 +3499,37 @@ export const AdminDashboard = () => {
                                           day: day,
                                           period: p,
                                           subject: slotData.subject,
-                                          teacherName: slotData.teacherName === "Not Assigned" ? "" : slotData.teacherName,
+                                          teacherName:
+                                            slotData.teacherName ===
+                                            "Not Assigned"
+                                              ? ""
+                                              : slotData.teacherName,
                                         });
                                       }}
                                       className="p-2 rounded-xl bg-indigo-50 border border-indigo-100 text-left relative group hover:scale-[1.02] hover:bg-indigo-50/90 transition-all cursor-pointer hover:border-indigo-400"
                                       title="Click to Edit"
                                     >
-                                      <span className="font-extrabold text-indigo-700 text-[11px] block truncate" title={slotData.subject}>
+                                      <span
+                                        className="font-extrabold text-indigo-700 text-[11px] block truncate"
+                                        title={slotData.subject}
+                                      >
                                         {slotData.subject}
                                       </span>
-                                      <span className="text-[10px] text-slate-500 block mt-1 truncate" title={slotData.teacherName}>
+                                      <span
+                                        className="text-[10px] text-slate-500 block mt-1 truncate"
+                                        title={slotData.teacherName}
+                                      >
                                         👤 {slotData.teacherName}
                                       </span>
                                       <span className="text-[9px] text-indigo-500 font-mono block mt-0.5">
-                                        ⏱ {getPeriodTime(p, timetableStartHour, timetablePeriodDuration).split(" - ")[0]}
+                                        ⏱{" "}
+                                        {
+                                          getPeriodTime(
+                                            p,
+                                            timetableStartHour,
+                                            timetablePeriodDuration,
+                                          ).split(" - ")[0]
+                                        }
                                       </span>
                                       <button
                                         type="button"
@@ -3256,7 +3543,9 @@ export const AdminDashboard = () => {
                                       </button>
                                     </div>
                                   ) : (
-                                    <span className="text-[11px] text-slate-300 italic">-</span>
+                                    <span className="text-[11px] text-slate-300 italic">
+                                      -
+                                    </span>
                                   )}
                                 </td>
                               );
@@ -3539,77 +3828,85 @@ export const AdminDashboard = () => {
                   Student Fee Payment Requests
                 </h3>
                 <p className="text-xs text-slate-400 mb-6">
-                  Verify bank transfers/UPI details and UTR transaction numbers to approve fee deductions.
+                  Verify bank transfers/UPI details and UTR transaction numbers
+                  to approve fee deductions.
                 </p>
                 <div className="space-y-4 flex-1 max-h-[350px] overflow-y-auto pr-1">
-                  {feePaymentRequests.filter((r) => r.status === "Pending").length === 0 && (
+                  {feePaymentRequests.filter((r) => r.status === "Pending")
+                    .length === 0 && (
                     <p className="text-center py-8 text-slate-400 text-xs font-semibold">
                       No pending payment verification requests.
                     </p>
                   )}
-                  {feePaymentRequests.filter((r) => r.status === "Pending").map((req) => (
-                    <div
-                      key={req.id}
-                      className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3 text-xs"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-extrabold text-sm text-slate-850">
-                            {req.studentName}
-                          </h4>
-                          <span className="text-[10px] text-slate-450 font-bold block mt-0.5">
-                            Class {req.class} | Date: {req.paymentDate}
+                  {feePaymentRequests
+                    .filter((r) => r.status === "Pending")
+                    .map((req) => (
+                      <div
+                        key={req.id}
+                        className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex flex-col gap-3 text-xs"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-extrabold text-sm text-slate-850">
+                              {req.studentName}
+                            </h4>
+                            <span className="text-[10px] text-slate-450 font-bold block mt-0.5">
+                              Class {req.class} | Date: {req.paymentDate}
+                            </span>
+                          </div>
+                          <span className="bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider">
+                            Pending
                           </span>
                         </div>
-                        <span className="bg-amber-50 text-amber-600 border border-amber-100 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider">
-                          Pending
-                        </span>
+
+                        <div className="grid grid-cols-2 gap-y-1 text-[11px] bg-slate-100/40 p-2.5 rounded-xl border border-slate-200/40">
+                          <span className="text-slate-450">Amount Sent:</span>
+                          <span className="font-extrabold text-slate-800 text-right">
+                            ₹{req.amountPaid.toLocaleString()}
+                          </span>
+
+                          <span className="text-slate-450">UTR / Txn ID:</span>
+                          <span className="font-mono font-bold text-indigo-600 text-right">
+                            {req.transactionId}
+                          </span>
+                        </div>
+
+                        {req.message && (
+                          <p className="text-[11px] text-slate-500 italic bg-white p-2.5 rounded-xl border border-slate-100">
+                            "{req.message}"
+                          </p>
+                        )}
+
+                        <div className="flex gap-2 justify-end pt-1">
+                          <button
+                            onClick={() =>
+                              handlePaymentRequestDecision(
+                                req.id,
+                                "Approved",
+                                req.amountPaid,
+                                req.studentId,
+                              )
+                            }
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold text-xs shadow-sm shadow-emerald-650/10 transition-all"
+                          >
+                            Approve Payment
+                          </button>
+                          <button
+                            onClick={() =>
+                              handlePaymentRequestDecision(
+                                req.id,
+                                "Rejected",
+                                req.amountPaid,
+                                req.studentId,
+                              )
+                            }
+                            className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 rounded-xl text-rose-600 font-bold text-xs transition-all"
+                          >
+                            Reject
+                          </button>
+                        </div>
                       </div>
-
-                      <div className="grid grid-cols-2 gap-y-1 text-[11px] bg-slate-100/40 p-2.5 rounded-xl border border-slate-200/40">
-                        <span className="text-slate-450">Amount Sent:</span>
-                        <span className="font-extrabold text-slate-800 text-right">₹{req.amountPaid.toLocaleString()}</span>
-
-                        <span className="text-slate-450">UTR / Txn ID:</span>
-                        <span className="font-mono font-bold text-indigo-600 text-right">{req.transactionId}</span>
-                      </div>
-
-                      {req.message && (
-                        <p className="text-[11px] text-slate-500 italic bg-white p-2.5 rounded-xl border border-slate-100">
-                          "{req.message}"
-                        </p>
-                      )}
-
-                      <div className="flex gap-2 justify-end pt-1">
-                        <button
-                          onClick={() =>
-                            handlePaymentRequestDecision(
-                              req.id,
-                              "Approved",
-                              req.amountPaid,
-                              req.studentId,
-                            )
-                          }
-                          className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold text-xs shadow-sm shadow-emerald-650/10 transition-all"
-                        >
-                          Approve Payment
-                        </button>
-                        <button
-                          onClick={() =>
-                            handlePaymentRequestDecision(
-                              req.id,
-                              "Rejected",
-                              req.amountPaid,
-                              req.studentId,
-                            )
-                          }
-                          className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 rounded-xl text-rose-600 font-bold text-xs transition-all"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
 
                 {/* History Log section inside approvals hub */}
@@ -3618,30 +3915,35 @@ export const AdminDashboard = () => {
                     Resolved Payments Log
                   </h3>
                   <div className="space-y-3 max-h-[200px] overflow-y-auto pr-1">
-                    {feePaymentRequests.filter((r) => r.status !== "Pending").map((req) => (
-                      <div
-                        key={req.id}
-                        className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl flex justify-between items-center text-xs"
-                      >
-                        <div>
-                          <span className="font-bold text-slate-700 block">
-                            {req.studentName} (₹{req.amountPaid.toLocaleString()})
-                          </span>
-                          <span className="text-[10px] text-slate-400 block mt-0.5">
-                            UTR: {req.transactionId} | Date: {req.paymentDate}
+                    {feePaymentRequests
+                      .filter((r) => r.status !== "Pending")
+                      .map((req) => (
+                        <div
+                          key={req.id}
+                          className="p-3 bg-slate-50/50 border border-slate-100 rounded-xl flex justify-between items-center text-xs"
+                        >
+                          <div>
+                            <span className="font-bold text-slate-700 block">
+                              {req.studentName} (₹
+                              {req.amountPaid.toLocaleString()})
+                            </span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5">
+                              UTR: {req.transactionId} | Date: {req.paymentDate}
+                            </span>
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                              req.status === "Approved"
+                                ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
+                                : "bg-rose-50 text-rose-600 border border-rose-100"
+                            }`}
+                          >
+                            {req.status}
                           </span>
                         </div>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${req.status === "Approved"
-                              ? "bg-emerald-50 text-emerald-600 border border-emerald-100"
-                              : "bg-rose-50 text-rose-600 border border-rose-100"
-                            }`}
-                        >
-                          {req.status}
-                        </span>
-                      </div>
-                    ))}
-                    {feePaymentRequests.filter((r) => r.status !== "Pending").length === 0 && (
+                      ))}
+                    {feePaymentRequests.filter((r) => r.status !== "Pending")
+                      .length === 0 && (
                       <p className="text-center py-6 text-slate-400 text-xs">
                         No payment requests processed yet.
                       </p>
@@ -3755,7 +4057,9 @@ export const AdminDashboard = () => {
                     {selectedStudentForModal.name}
                   </h3>
                   <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">
-                    Roll Number: {selectedStudentForModal.rollNo} | {selectedStudentForModal.class} - {selectedStudentForModal.section}
+                    Roll Number: {selectedStudentForModal.rollNo} |{" "}
+                    {selectedStudentForModal.class} -{" "}
+                    {selectedStudentForModal.section}
                   </p>
                 </div>
                 <button
@@ -3775,40 +4079,76 @@ export const AdminDashboard = () => {
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-xs text-slate-600">
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Father's Name</span>
-                      <span className="font-semibold text-slate-800">{selectedStudentForModal.fatherName || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Father's Name
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedStudentForModal.fatherName || "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Father's Mobile</span>
-                      <span className="font-semibold text-slate-800 font-mono">{selectedStudentForModal.fatherMobile || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Father's Mobile
+                      </span>
+                      <span className="font-semibold text-slate-800 font-mono">
+                        {selectedStudentForModal.fatherMobile || "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Mother's Name</span>
-                      <span className="font-semibold text-slate-800">{selectedStudentForModal.motherName || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Mother's Name
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedStudentForModal.motherName || "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Mother's Mobile</span>
-                      <span className="font-semibold text-slate-800 font-mono">{selectedStudentForModal.motherMobile || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Mother's Mobile
+                      </span>
+                      <span className="font-semibold text-slate-800 font-mono">
+                        {selectedStudentForModal.motherMobile || "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Aadhar Number</span>
-                      <span className="font-semibold text-slate-800 font-mono">{selectedStudentForModal.aadharNo || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Aadhar Number
+                      </span>
+                      <span className="font-semibold text-slate-800 font-mono">
+                        {selectedStudentForModal.aadharNo || "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Date of Birth</span>
-                      <span className="font-semibold text-slate-800">{selectedStudentForModal.dob || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Date of Birth
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedStudentForModal.dob || "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Gender</span>
-                      <span className="font-semibold text-slate-800">{selectedStudentForModal.gender || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Gender
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedStudentForModal.gender || "N/A"}
+                      </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Blood Group</span>
-                      <span className="font-semibold text-slate-800">{selectedStudentForModal.bloodGroup || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Blood Group
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedStudentForModal.bloodGroup || "N/A"}
+                      </span>
                     </div>
                     <div className="col-span-2">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Residential Address</span>
-                      <span className="font-semibold text-slate-800">{selectedStudentForModal.address || "N/A"}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Residential Address
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedStudentForModal.address || "N/A"}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -3820,18 +4160,29 @@ export const AdminDashboard = () => {
                       Attendance Roster
                     </h4>
                     <span className="text-xs font-black text-indigo-600">
-                      Overall: {selectedStudentForModal.overallAttendance || 100}%
+                      Overall:{" "}
+                      {selectedStudentForModal.overallAttendance || 100}%
                     </span>
                   </div>
 
                   <div className="max-h-[160px] overflow-y-auto space-y-2 pr-1">
-                    {(!selectedStudentForModal.attendanceHistory || selectedStudentForModal.attendanceHistory.length === 0) ? (
-                      <p className="text-xs text-slate-400 text-center py-4">No attendance marked yet.</p>
+                    {!selectedStudentForModal.attendanceHistory ||
+                    selectedStudentForModal.attendanceHistory.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-4">
+                        No attendance marked yet.
+                      </p>
                     ) : (
                       selectedStudentForModal.attendanceHistory.map((h, i) => (
-                        <div key={i} className="flex justify-between text-xs bg-white p-2 rounded-xl border border-slate-100">
-                          <span className="font-semibold text-slate-650">{h.date}</span>
-                          <span className={`font-bold uppercase ${h.status === "Present" ? "text-emerald-600" : "text-rose-600"}`}>
+                        <div
+                          key={i}
+                          className="flex justify-between text-xs bg-white p-2 rounded-xl border border-slate-100"
+                        >
+                          <span className="font-semibold text-slate-650">
+                            {h.date}
+                          </span>
+                          <span
+                            className={`font-bold uppercase ${h.status === "Present" ? "text-emerald-600" : "text-rose-600"}`}
+                          >
                             {h.status}
                           </span>
                         </div>
@@ -3849,19 +4200,32 @@ export const AdminDashboard = () => {
                     Academic Reports
                   </h4>
                   <div className="max-h-[180px] overflow-y-auto space-y-2 pr-1">
-                    {(!selectedStudentForModal.marks || selectedStudentForModal.marks.length === 0) ? (
-                      <p className="text-xs text-slate-400 text-center py-4">No exams recorded yet.</p>
+                    {!selectedStudentForModal.marks ||
+                    selectedStudentForModal.marks.length === 0 ? (
+                      <p className="text-xs text-slate-400 text-center py-4">
+                        No exams recorded yet.
+                      </p>
                     ) : (
                       selectedStudentForModal.marks.map((m, i) => (
-                        <div key={i} className="p-2.5 bg-white rounded-xl border border-slate-150 flex justify-between items-center text-xs">
+                        <div
+                          key={i}
+                          className="p-2.5 bg-white rounded-xl border border-slate-150 flex justify-between items-center text-xs"
+                        >
                           <div>
-                            <span className="font-extrabold text-slate-800">{m.subject}</span>
-                            <span className="text-[10px] text-slate-400 block mt-0.5 font-bold uppercase">{m.exam}</span>
+                            <span className="font-extrabold text-slate-800">
+                              {m.subject}
+                            </span>
+                            <span className="text-[10px] text-slate-400 block mt-0.5 font-bold uppercase">
+                              {m.exam}
+                            </span>
                           </div>
                           <div className="text-right">
-                            <span className="font-black text-slate-800">{m.marksObtained}/{m.maxMarks}</span>
+                            <span className="font-black text-slate-800">
+                              {m.marksObtained}/{m.maxMarks}
+                            </span>
                             <span className="text-[10px] text-indigo-500 font-bold block">
-                              {Math.round((m.marksObtained / m.maxMarks) * 100)}%
+                              {Math.round((m.marksObtained / m.maxMarks) * 100)}
+                              %
                             </span>
                           </div>
                         </div>
@@ -3877,22 +4241,39 @@ export const AdminDashboard = () => {
                   </h4>
                   <div className="grid grid-cols-2 gap-4 text-xs text-slate-600 bg-white p-4 rounded-2xl border border-slate-100">
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Total Fees</span>
-                      <span className="font-black text-slate-800 text-sm">₹{selectedStudentForModal.fees?.total?.toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Paid Amount</span>
-                      <span className="font-black text-emerald-600 text-sm">₹{selectedStudentForModal.fees?.paid?.toLocaleString()}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Pending Balance</span>
-                      <span className={`font-black text-sm ${selectedStudentForModal.fees?.balance > 0 ? "text-rose-500" : "text-emerald-600"}`}>
-                        ₹{selectedStudentForModal.fees?.balance?.toLocaleString()}
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Total Fees
+                      </span>
+                      <span className="font-black text-slate-800 text-sm">
+                        ₹{selectedStudentForModal.fees?.total?.toLocaleString()}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Due Date</span>
-                      <span className="font-semibold text-slate-800">{selectedStudentForModal.fees?.dueDate}</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Paid Amount
+                      </span>
+                      <span className="font-black text-emerald-600 text-sm">
+                        ₹{selectedStudentForModal.fees?.paid?.toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Pending Balance
+                      </span>
+                      <span
+                        className={`font-black text-sm ${selectedStudentForModal.fees?.balance > 0 ? "text-rose-500" : "text-emerald-600"}`}
+                      >
+                        ₹
+                        {selectedStudentForModal.fees?.balance?.toLocaleString()}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">
+                        Due Date
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {selectedStudentForModal.fees?.dueDate}
+                      </span>
                     </div>
                   </div>
                 </div>

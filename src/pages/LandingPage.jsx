@@ -195,7 +195,7 @@ h1, h2, h3, h4, .serif {
 }
 .hero-overlay {
   position: absolute; inset: 0;
-  background: linear-gradient(135deg, rgba(8,14,34,0.85) 0%, rgba(15,27,61,0.6) 50%, rgba(0,0,0,0.3) 100%);
+  background: linear-gradient(135deg, rgba(0,0,0,0.75) 0%, rgba(8,14,34,0.65) 50%, rgba(0,0,0,0.5) 100%);
 }
 .hero-content {
   position: absolute; inset: 0;
@@ -219,13 +219,15 @@ h1, h2, h3, h4, .serif {
   color: #fff;
   line-height: 1.1;
   margin-bottom: 12px;
+  text-shadow: 0 2px 20px rgba(0,0,0,0.5);
 }
 .hero-subtitle {
   font-size: clamp(1rem, 1.5vw, 1.2rem);
-  color: rgba(255,255,255,0.7);
+  color: #f0f0f0;
   line-height: 1.6;
   margin-bottom: 32px;
   max-width: 560px;
+  text-shadow: 0 1px 10px rgba(0,0,0,0.4);
 }
 .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 .hero-btn-primary {
@@ -236,17 +238,19 @@ h1, h2, h3, h4, .serif {
   font-weight: 700; font-size: 0.9rem;
   text-decoration: none; transition: all 0.2s;
   display: inline-flex; align-items: center; gap: 8px;
+  display: none;
 }
 .hero-btn-primary:hover { background: var(--gold-light); transform: translateY(-2px); }
 .hero-btn-secondary {
-  padding: 13px 30px;
+  padding: 14px 32px;
   border-radius: 6px;
-  border: 2px solid rgba(255,255,255,0.3);
-  color: #fff;
-  font-weight: 600; font-size: 0.9rem;
+  background: var(--gold);
+  color: var(--navy-dark);
+  font-weight: 700; font-size: 0.9rem;
   text-decoration: none; transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 8px;
 }
-.hero-btn-secondary:hover { border-color: #fff; background: rgba(255,255,255,0.08); }
+.hero-btn-secondary:hover { background: var(--gold-light); transform: translateY(-2px); }
 
 /* Hero nav dots */
 .hero-dots {
@@ -1085,7 +1089,11 @@ export const LandingPage = () => {
       <nav className="navbar">
         <div className="container navinner">
           <Link to="/" className="nav-logo">
-            <div className="nav-logo-icon">PS</div>
+            <img
+              src="https://www.sarkarinaukriexams.com/images/post/1611823241Logo-removebg-preview.png"
+              alt={content.schoolName}
+              style={{ height: 52, width: "auto", objectFit: "contain" }}
+            />
             <div>
               <div className="nav-logo-text">{content.schoolName}</div>
               <div className="nav-logo-sub">{content.schoolTagline}</div>
@@ -1195,9 +1203,9 @@ export const LandingPage = () => {
                 </motion.div>
               </AnimatePresence>
               <div className="hero-actions">
-                <a href="#contact" className="hero-btn-primary">
-                  Apply Now →
-                </a>
+                <Link to={getDashboardPath()} className="hero-btn-primary">
+                  {userRole ? "Dashboard →" : "Login →"}
+                </Link>
                 <a href="#about" className="hero-btn-secondary">
                   Learn More
                 </a>
